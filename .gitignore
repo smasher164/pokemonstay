@@ -1,0 +1,11 @@
+# Ignore everything
+*
+# Whitelist subdirectories
+!*/
+
+# Whitelist the following extensions
+!*.py
+!*.md
+!.gitignore
+
+# Whitelist the following files
