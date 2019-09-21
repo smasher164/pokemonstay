@@ -6,6 +6,11 @@
 # Whitelist the following extensions
 !*.py
 !*.md
+!*.txt
+!*.sh
+!*.service
 !.gitignore
 
 # Whitelist the following files
+!Makefile
+!Dockerfile

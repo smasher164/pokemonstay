@@ -1,0 +1,14 @@
+[Unit]
+Description=stay
+After=docker.service
+Requires=docker.service
+
+[Service]
+User=core
+TimeoutStartSec=0
+KillMode=none
+ExecStart=/home/core/stay.sh
+ExecStop=/usr/bin/docker stop stay
+
+[Install]
+WantedBy=multi-user.target
