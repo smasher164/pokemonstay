@@ -9,6 +9,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - run: |
+          echo $GITHUB_WORKSPACE # debugging
           cd $GITHUB_WORKSPACE/pokemonstay
           docker login --username="smasher164" --password="{{ secrets.DOCKER_HUB_PASSWORD }}"
           docker push smasher164/stay:prod
