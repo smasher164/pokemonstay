@@ -18,4 +18,4 @@ jobs:
           HOST: akhil.cc
           USER: core
         with:
-          docker pull smasher164/stay:prod && sudo systemctl restart stay
+          args: docker pull smasher164/stay:prod && sudo systemctl restart stay
