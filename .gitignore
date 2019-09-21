@@ -9,6 +9,7 @@
 !*.txt
 !*.sh
 !*.service
+!*.yml
 !.gitignore
 
 # Whitelist the following files

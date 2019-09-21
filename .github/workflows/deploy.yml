@@ -1,0 +1,21 @@
+name: Production Deployment
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - run: |
+          cd $GITHUB_WORKSPACE/pokemonstay
+          docker login --username="smasher164" --password="{{ secrets.DOCKER_HUB_PASSWORD }}"
+          docker push smasher164/stay:prod
+      - uses: maddox/actions/ssh@master
+        env:
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          HOST: akhil.cc
+          USER: core
+        with:
+          docker pull smasher164/stay:prod && sudo systemctl restart stay
