@@ -5,7 +5,7 @@ import logging
 app = Flask("pokemonstay")
 
 conn = {}
-debug = bool(os.environ.get("DEBUG"))
+debug = os.environ.get("DEBUG") == "True"
 dbhost = os.environ.get("DB_HOST")
 dbuser = os.environ.get("DB_USERNAME")
 dbpass = os.environ.get("DB_PASSWORD")
@@ -29,4 +29,4 @@ def root():
             s += user[0].decode("utf-8")
         cursor.close()
         return s
-    return "Hello, Production"
+    return "Hello Ryan"
