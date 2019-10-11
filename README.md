@@ -2,16 +2,17 @@
 
 This repository holds the source for the Pokémon Stay group project for CS 3250. Local development and builds can be done with
 ```
-$ make run
+$ ./stay start db --port=[PORT] --password=[PASSWORD]
+$ ./stay start app --port=[PORT] --debug=[DEBUG]
 ```
 and with the correct credentials, deployment to the server can be done with
 ```
-$ make deploy
+$ ./stay deploy
 ```
 
 ### Development
 
-Development requires [Docker](https://www.docker.com/) to be installed on your local machine. Additionally, the Makefile assumes that Unix shell commands can be run on your system. This can be updated to accomodate Windows users, but a Unix-like environment would be preferrable.
+Development requires [Docker](https://www.docker.com/) to be installed on your local machine. Additionally, the shell script assumes that Unix shell commands can be run on your system. This can be updated to accomodate Windows users, but a Unix-like environment would be preferrable.
 - MacOS users: Install [Docker Community Edition (CE) for Mac](https://docs.docker.com/v17.12/docker-for-mac/install/)
 - Linux users: Install [Docker Community Edition (CE) for your distro](https://docs.docker.com/v17.12/install/#server)
 - Windows users: (Please file an issue if you encounter any problems with the process below)

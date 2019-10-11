@@ -1,0 +1,127 @@
+#!/bin/bash
+
+function startapp() {
+	# - docker rmi -f stay:app
+	docker rm -f stayapp 2> /dev/null
+	echo "Shutting down existing application..."
+	PORT=8080
+	DEBUG=True
+	for e in ${@:3}
+	do
+		case $e in
+			--port=*)
+				PORT="${e#*=}"
+				shift
+				;;
+			--debug=*)
+				DEBUG="${e#*=}"
+				shift
+				;;
+		esac
+	done
+	docker build -f Dockerfile.app . --tag stay:app
+	docker run -it --name stayapp --net dbnet -p ${PORT}:8000 -e DB_HOST="staydb" -e DB_USERNAME=root -e DB_PASSWORD=password -e DEBUG=${DEBUG} -d stay:app
+}
+
+function startdb() {
+	docker rm -f staydb 2> /dev/null
+	docker rm -f stayadmin 2> /dev/null
+	echo "Shutting down existing database containers..."
+	PORT=8081
+	for e in ${@:3}
+	do
+		case $e in
+			--password=*)
+				PASSWORD="${e#*=}"
+			    shift
+			    ;;
+			--port=*)
+				PORT="${e#*=}"
+				shift
+				;;
+		esac
+	done
+	if [ -z "${PASSWORD}" ]
+	then
+	      echo "Database password is not set. Set it with --password"
+	      exit 1
+	fi
+	echo "Starting up database..."
+	docker run --name staydb --net dbnet --hostname=staydb -e MYSQL_ROOT_PASSWORD=${PASSWORD} -d mariadb:10.3.17
+	echo "Starting up phpmyadmin at localhost:${PORT}..."
+	docker run --name stayadmin --net dbnet -e PMA_HOST=staydb -p ${PORT}:80 -d phpmyadmin/phpmyadmin
+}
+
+function start() {
+	case $2 in
+		app)
+			startapp $@
+			;;
+		db)
+			startdb $@
+			;;
+	esac
+}
+
+function stop() {
+	case $2 in
+		app)
+			docker rm -f stayapp 2> /dev/null
+			;;
+		db)
+			docker rm -f staydb 2> /dev/null
+			docker rm -f stayadmin 2> /dev/null
+			;;
+		all)
+			docker rm -f stayapp 2> /dev/null
+			docker rm -f staydb 2> /dev/null
+			docker rm -f stayadmin 2> /dev/null
+			;;
+	esac
+}
+
+function test() {
+	echo test $2
+}
+
+function deploy() {
+	## Run the command below to remove the image with the tag
+	## 'stay:prod'from your system. I left it out here so that
+	## local builds are faster.
+	# docker rmi -f stay:prod
+
+	# Remove running container. '-' prefix indicates that it's okay
+	# if the command produces an error, i.e. there is no running
+	# container with the name 'stay'.
+	docker rm -f stay
+
+	# Build the image with the Dockerfile in the current directory,
+	# and tag it with 'stay:prod'.
+	docker build -f Dockerfile.app . --tag stay:prod
+
+	# Tag the local 'stay:prod' image into the smasher164 repository.
+	docker tag stay:prod smasher164/stay:prod
+
+	# Push the tagged image to the docker hub registry.
+	docker push smasher164/stay:prod
+
+	# SSH into VM, pull down the image, and restart the service.
+	ssh core@akhil.cc "docker pull smasher164/stay:prod && sudo systemctl restart stay"
+}
+
+docker network create dbnet 2> /dev/null
+echo "Creating virtual network..."
+case $1 in
+	start)
+		start $@
+		;;
+	stop)
+		stop $@
+		;;
+	test)
+		test $@
+		;;
+	deploy)
+		deploy $@
+		;;
+esac
