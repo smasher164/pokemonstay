@@ -20,7 +20,7 @@ function startapp() {
 		esac
 	done
 	docker build -f Dockerfile.app . --tag stay:app
-	docker run -it --name stayapp --net dbnet -p ${PORT}:8000 -e DB_HOST="staydb" -e DB_USERNAME=root -e DB_PASSWORD=password -e DEBUG=${DEBUG} -d stay:app
+	docker run --name stayapp --net dbnet -p ${PORT}:8000 -e DB_HOST="staydb" -e DB_USERNAME=root -e DB_PASSWORD=password -e DEBUG=${DEBUG} -d stay:app
 }
 
 function startdb() {
