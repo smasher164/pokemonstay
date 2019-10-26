@@ -4,29 +4,29 @@ import mysql.connector as db
 import logging
 app = Flask("pokemonstay")
 
-conn = {}
-debug = os.environ.get("DEBUG") == "True"
-dbhost = os.environ.get("DB_HOST")
-dbuser = os.environ.get("DB_USERNAME")
-dbpass = os.environ.get("DB_PASSWORD")
+# Store application's state in this dictionary
+stay = {}
 
-if debug:
-    conn = db.connect(host=dbhost, port=3306, user=dbuser, password=dbpass, database='mysql')
-    if not dbhost:
-        raise ValueError("No database hostname/ip set")
-    if not dbuser:
-        raise ValueError("No database username set")
-    if not dbpass:
-        raise ValueError("No database password set")
+def env(s):
+    v = os.environ.get(s)
+    if not v:
+        raise ValueError(f"{s} not set")
+    return v
+
+def init():
+    # Use this flag for debug-specific logic
+    stay.debug = env("DEBUG") == "True"
+    stay.conn = db.connect(
+        host=env("DB_HOST"),
+        user=env("DB_USERNAME"),
+        password=env("DB_PASSWORD"),
+        database=env("DB_NAME"),
+    )
 
 @app.route("/")
 def root():
-    if debug:
-        cursor = conn.cursor()
-        cursor.execute("SELECT User FROM user;")
-        s = ''
-        for (user) in cursor:
-            s += user[0].decode("utf-8")
-        cursor.close()
-        return s
-    return "Hello Ryan"
+    return "Hello Peeps"
+
+if __name__ == '__main__':
+    init()
+    app.run()
