@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Rename</title>
+</head>
+<body>
+    <h1>Rename mon {{ id }}</h1>
+    <form action="/rename/submit/{{ id }}" method="POST">
+        New Nickname: <input type="text" name="nickname" maxlength="20"><br>
+        <input type="submit" value="Submit">
+      </form>
+</body>
+</html>
