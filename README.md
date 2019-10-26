@@ -2,12 +2,11 @@
 
 This repository holds the source for the Pokémon Stay group project for CS 3250. Local development and builds can be done with
 ```
-$ ./stay start db --port=[PORT] --password=[PASSWORD]
-$ ./stay start app --port=[PORT] --debug=[DEBUG]
+$ ./stay start app --port=[PORT] --debug=[DEBUG] --dbhost=[DB_HOST] --dbname=[DB_NAME] --dbuser=[DB_USERNAME] --dbpass=[DB_PASSWORD]
 ```
-and with the correct credentials, deployment to the server can be done with
+Most flags are optional, so you can simply run it with
 ```
-$ ./stay deploy
+$ ./stay start app --dbpass=[DB_PASSWORD]
 ```
 
 ### Development
@@ -22,6 +21,6 @@ Development requires [Docker](https://www.docker.com/) to be installed on your l
 
 ### Deployment
 
-This repository is set up to deploy on push to master. The deployment process's log can be observed under the "Production Deployment" workflow in the Actions tab of the repo.
+This repository is set up to deploy on commit to master. The deployment process's log can be observed under the "Production Deployment" workflow in the Actions tab of the repo.
 
-The Docker image we are currently using is based on the latest Python 3.8 beta as well as Alpine Linux 3.10. The `stay.service` and `stay.sh` files can be ignored as they are deployment details that already exist on the cloud provider's VM.
+The Docker image we are currently using is based on the latest Python 3.8 beta as well as Alpine Linux 3.10.

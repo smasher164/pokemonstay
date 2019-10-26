@@ -45,6 +45,7 @@ function startapp() {
 	fi
 	docker build -f Dockerfile.app . --tag stay:app
 	docker run --name stayapp -p ${PORT}:8000 -e DB_HOST=${DB_HOST} -e DB_NAME=${DB_NAME} -e DB_USERNAME=${DB_USERNAME} -e DB_PASSWORD=${DB_PASSWORD} -e DEBUG=${DEBUG} -d stay:app
+	echo "Running application on localhost:${PORT}..."
 }
 
 function start() {
