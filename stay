@@ -6,6 +6,9 @@ function startapp() {
 	echo "Shutting down existing application..."
 	PORT=8080
 	DEBUG=True
+	DB_HOST=cs4750.cs.virginia.edu
+	DB_NAME=tl2rb
+	DB_USERNAME=tl2rb_a
 	for e in ${@:3}
 	do
 		case $e in
@@ -17,48 +20,37 @@ function startapp() {
 				DEBUG="${e#*=}"
 				shift
 				;;
-		esac
-	done
-	docker build -f Dockerfile.app . --tag stay:app
-	docker run --name stayapp --net dbnet -p ${PORT}:8000 -e DB_HOST="staydb" -e DB_USERNAME=root -e DB_PASSWORD=password -e DEBUG=${DEBUG} -d stay:app
-}
-
-function startdb() {
-	docker rm -f staydb 2> /dev/null
-	docker rm -f stayadmin 2> /dev/null
-	echo "Shutting down existing database containers..."
-	PORT=8081
-	for e in ${@:3}
-	do
-		case $e in
-			--password=*)
-				PASSWORD="${e#*=}"
-			    shift
-			    ;;
-			--port=*)
-				PORT="${e#*=}"
+			--dbhost=*)
+				DB_HOST="${e#*=}"
+				shift
+				;;
+			--dbname=*)
+				DB_NAME="${e#*=}"
+				shift
+				;;
+			--dbuser=*)
+				DB_USERNAME="${e#*=}"
+				shift
+				;;
+			--dbpass=*)
+				DB_PASSWORD="${e#*=}"
 				shift
 				;;
 		esac
 	done
-	if [ -z "${PASSWORD}" ]
+	if [ -z "${DB_PASSWORD}" ]
 	then
-	      echo "Database password is not set. Set it with --password"
+	      echo "Database password is not set. Set it with --dbpass"
 	      exit 1
 	fi
-	echo "Starting up database..."
-	docker run --name staydb --net dbnet --hostname=staydb -e MYSQL_ROOT_PASSWORD=${PASSWORD} -d mariadb:10.3.17
-	echo "Starting up phpmyadmin at localhost:${PORT}..."
-	docker run --name stayadmin --net dbnet -e PMA_HOST=staydb -p ${PORT}:80 -d phpmyadmin/phpmyadmin
+	docker build -f Dockerfile.app . --tag stay:app
+	docker run --name stayapp -p ${PORT}:8000 -e DB_HOST=${DB_HOST} -e DB_NAME=${DB_NAME} -e DB_USERNAME=${DB_USERNAME} -e DB_PASSWORD=${DB_PASSWORD} -e DEBUG=${DEBUG} -d stay:app
 }
 
 function start() {
 	case $2 in
 		app)
 			startapp $@
-			;;
-		db)
-			startdb $@
 			;;
 	esac
 }
@@ -67,15 +59,6 @@ function stop() {
 	case $2 in
 		app)
 			docker rm -f stayapp 2> /dev/null
-			;;
-		db)
-			docker rm -f staydb 2> /dev/null
-			docker rm -f stayadmin 2> /dev/null
-			;;
-		all)
-			docker rm -f stayapp 2> /dev/null
-			docker rm -f staydb 2> /dev/null
-			docker rm -f stayadmin 2> /dev/null
 			;;
 	esac
 }
@@ -109,8 +92,6 @@ function deploy() {
 	ssh core@akhil.cc "docker pull smasher164/stay:prod && sudo systemctl restart stay"
 }
 
-docker network create dbnet 2> /dev/null
-echo "Creating virtual network..."
 case $1 in
 	start)
 		start $@
