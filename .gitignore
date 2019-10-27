@@ -10,6 +10,9 @@
 !*.sh
 !*.service
 !*.yml
+!*.html
+!*.css
+!*.js
 !.gitignore
 
 # Whitelist the following files
