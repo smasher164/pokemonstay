@@ -29,7 +29,7 @@ def init():
 
 @app.route("/")
 def root():
-    return render_template("create_account.html")
+    return render_template("index.html")
 
 if __name__ == '__main__':
     init()
