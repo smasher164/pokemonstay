@@ -15,8 +15,14 @@ WORKDIR /pokemonstay
 # dependencies from being reinstalled during development.
 ADD ./requirements.txt /pokemonstay/requirements.txt
 
+# Download dependencies.
+RUN apk --update add openssl ca-certificates py-openssl wget
+RUN apk --update add --virtual build-dependencies libffi-dev openssl-dev build-base \
+    && pip install -r requirements.txt \
+    && apk del build-dependencies
+
 # Download python dependencies.
-RUN pip install -r requirements.txt
+# RUN pip install -r requirements.txt
 
 # Copy everything in the current directory into /pokemonstay.
 COPY . /pokemonstay
