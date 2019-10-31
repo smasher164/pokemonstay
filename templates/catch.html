@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+        <meta name="Description" content="Catch a Pokemon!">
+        <title>Pokémon Stay | Catch a Pokémon!</title>
+        <link href="/static/main.css" rel="stylesheet">
+    </head>
+    <body>
+        {% if msg %}
+        <p><font color="red">{{ msg }}</font></p>
+        {% endif %}
+        {% if can_catch %}
+        <p>
+            You encountered {% if is_shiny %} shiny {% endif %}{{mon_name}}!
+        </p>
+        <form method="post">
+            <input name="pkmn_id" type="hidden" value="{{mon_id}}"/>
+            <input name="pkmn_shiny" type="hidden" value="{{is_shiny}}"/>
+            <input name="pkmn_gender" type="hidden" value="{{pkmn_gender}}"/>
+            <button>Catch</button>
+            <input type="button" value="Run" onclick='location.href="/myMon?msg=Got+away+safely!"'>
+        </form>
+        {% else %}
+        <p>
+            Time until next catch: {{wait_time}}
+        </p>
+        {% endif %}
+    </body>
+</html>
