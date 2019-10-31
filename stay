@@ -9,6 +9,7 @@ function startapp() {
 	DB_HOST=cs4750.cs.virginia.edu
 	DB_NAME=tl2rb
 	DB_USERNAME=tl2rb_a
+	JWT_SECRET=ljqLOhWzypKDhnejuiUeslqDlFYOSxiKRKD29oif9U8
 	for e in ${@:3}
 	do
 		case $e in
@@ -36,6 +37,10 @@ function startapp() {
 				DB_PASSWORD="${e#*=}"
 				shift
 				;;
+			--jwtsecret=*)
+				JWT_SECRET="${e#*=}"
+				shift
+				;;
 		esac
 	done
 	if [ -z "${DB_PASSWORD}" ]
@@ -44,8 +49,8 @@ function startapp() {
 	      exit 1
 	fi
 	docker build -f Dockerfile.app . --tag stay:app
-	docker run --name stayapp -p ${PORT}:8000 -e DB_HOST=${DB_HOST} -e DB_NAME=${DB_NAME} -e DB_USERNAME=${DB_USERNAME} -e DB_PASSWORD=${DB_PASSWORD} -e DEBUG=${DEBUG} -d stay:app
-	echo "Running application on localhost:${PORT}..."
+	docker run --name stayapp -p ${PORT}:8000 -e DB_HOST=${DB_HOST} -e DB_NAME=${DB_NAME} -e DB_USERNAME=${DB_USERNAME} -e DB_PASSWORD=${DB_PASSWORD} -e DEBUG=${DEBUG} -e JWT_SECRET=${JWT_SECRET} -d stay:app
+	echo "Running application on localhost:${PORT}"
 }
 
 function start() {
