@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Pokedex</title>
+</head>
+<body>
+    <h1>Pokedex</h1>
+    <table>
+        <tr>
+          <th>Pokemon Number</th>
+          <th>Pokemon Name</th>
+          <th>Type</th>
+          <th></th>
+        </tr>
+        {% for item in info %}
+        <tr>
+            <td>{{item.pokemonNo }}</td>
+            <td><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            <td>{{item.typeName }}</td>
+            <td>{{item.typeName2}}</td>
+        </tr>
+        {% endfor %}
+</body>
+</html>

@@ -132,25 +132,64 @@ def rename_submit(id):
     return redirect(url_for('myMon',msg="bad url"), code=302)
 
 
+@app.route("/pokedex")
+def dexMain_view():
+    cursor = stay["conn"].cursor(prepared=True)
+    query = ("SELECT pokemonNo, speciesName, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types ORDER By pokemonNo")
+    cursor.execute(query)
+    info = []
+    result = []
+    i = 0
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    while i < len(info):
+        item = {}
+        if i != len(info) -1 and info[i]['pokemonNo'] == info[i+1]['pokemonNo']:
+            item['pokemonNo'] = info[i]['pokemonNo']
+            item['speciesName'] = str(info[i]['speciesName'],'utf-8')
+            item['typeName'] = str(info[i]['typeName'],'utf-8')
+            item['typeName2'] = str(info[i+1]['typeName'],'utf-8')
+            result.append(item)
+            i +=2
+        else:
+            item['pokemonNo'] = info[i]['pokemonNo']
+            item['speciesName'] = str(info[i]['speciesName'],'utf-8')
+            item['typeName'] = str(info[i]['typeName'],'utf-8')
+            result.append(item)
+            i+=1 
+    cursor.close()
+    return render_template("/dexMain.html", info=result)
 
 @app.route("/dex/<id>")
 def dex_view(id):
     cursor = stay["conn"].cursor(prepared=True)
     # at most one match
-    query = ("SELECT speciesName FROM `pokemon` "
-            "Where pokemonNo=%s")
+    query = ("SELECT speciesName, pokemonNo, height, weight, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types Where pokemonNo=%s ORDER By pokemonNo")
     tup = (id,)
     cursor.execute(query, tup)
     info = []
+    result = []
+    i = 0
     columns = tuple( [d[0] for d in cursor.description] )
     for row in cursor:
         info.append(dict(zip(columns, row)))
-    for item in info:
-        item['speciesName'] = str(item['speciesName'],'utf-8')
-    size = len(info)
-    if size==0:
-        msg = "That mon species does not exist"
-    if size !=0:
-        msg = "You are viewing the dex entry for mon number " + str(id) + " which is " +info[0]['speciesName']
+
+    item = {}
+    if len(info) ==2:
+        item['pokemonNo'] = info[i]['pokemonNo']
+        item['height'] = info[i]['height'] / 10
+        item['weight'] = info[i]['weight'] / 10
+        item['speciesName'] = str(info[i]['speciesName'],'utf-8')
+        item['typeName'] = str(info[i]['typeName'],'utf-8')
+        item['typeName2'] = str(info[i+1]['typeName'],'utf-8')
+        result.append(item)
+    else:
+        item['pokemonNo'] = info[i]['pokemonNo']
+        item['height'] = info[i]['height'] / 10
+        item['weight'] = info[i]['weight'] / 10
+        item['speciesName'] = str(info[i]['speciesName'],'utf-8')
+        item['typeName'] = str(info[i]['typeName'],'utf-8')
+        result.append(item) 
     cursor.close()
-    return msg
+    return render_template("/dex.html", info=result)

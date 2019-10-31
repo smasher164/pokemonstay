@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Pokedex Entry</title>
+</head>
+<body>
+    <h1>Pokedex Entry</h1>
+        {% for item in info %}
+            {% if item.typeName2 %}
+            <h2>{{item.pokemonNo }} {{ item.speciesName }}</h2>
+            <p>Types: {{item.typeName }} {{item.typeName2}}</p>
+            <p>Height: {{item.height}} m</p>
+            <p>Weight: {{item.weight}} kg</p>
+            {% else %}
+            <h2>{{item.pokemonNo }} {{ item.speciesName }}</h2>
+            <p>Type: {{item.typeName }}</p>
+            <p>Height: {{item.height}} m</p>
+            <p>Weight: {{item.weight}} kg</p>
+            {% endif %}
+        {% endfor %}
+</body>
+</html>
