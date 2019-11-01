@@ -259,7 +259,7 @@ def auth():
 
         # Check db for preexisting record for that email
         try:
-            cursor = stay["conn"].cursor(prepared=True)
+            cursor = stay["conn"].cursor()
             cursor.execute("SELECT userid, passHash FROM Trainer WHERE email = %s", (email,))
             row = cursor.fetchone()
             cursor.close()

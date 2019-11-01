@@ -55,7 +55,7 @@
                 if (isRegister)
                     submitRegister(e)
                 else
-                    submitSignIn(e)
+                    submitSignIn(e)                
             })
             let submitRegister = e => {
                 let email = document.querySelector("#in-email").value
@@ -70,6 +70,7 @@
                         message.textContent = ev.target.response.err
                     } else {
                         message.textContent = "Account creation was successful"
+                        window.location.replace("/")
                     }
                 })
                 req.open('POST', '/auth/create-account')
@@ -86,7 +87,8 @@
                     if (ev.target.status != 200) {
                         message.textContent = ev.target.response.err
                     } else {
-                        message.textContent = "Account creation was successful"
+                        message.textContent = "Login was successful"
+                        window.location.replace("/")
                     }
                 })
                 req.open('POST', '/auth/login')
