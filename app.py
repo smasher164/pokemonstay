@@ -259,7 +259,7 @@ def auth():
 
         # Check db for preexisting record for that email
         try:
-            cursor = stay["conn"].cursor()
+            cursor = stay["conn"].cursor(prepared=True)
             cursor.execute("SELECT userid, passHash FROM Trainer WHERE email = %s", (email,))
             row = cursor.fetchone()
             cursor.close()
@@ -274,7 +274,7 @@ def auth():
 
         # Set lastLogin.
         try:
-            cursor = stay["conn"].cursor()
+            cursor = stay["conn"].cursor(prepared=True)
             cursor.execute("UPDATE Trainer SET lastLogin = %s WHERE userid = %s", (lastLogin, userid))
             stay["conn"].commit()
             cursor.close()
@@ -299,7 +299,7 @@ def auth():
 
         # Check db for preexisting record for that email
         try:
-            cursor = stay["conn"].cursor()
+            cursor = stay["conn"].cursor(prepared=True)
             cursor.execute("SELECT userid FROM Trainer WHERE email = %s", (email,))
             nrows = len(cursor.fetchall())
             cursor.close()
@@ -321,7 +321,7 @@ def auth():
 
         # Insert into table
         try:
-            cursor = stay["conn"].cursor()
+            cursor = stay["conn"].cursor(prepared=True)
             cursor.execute("INSERT INTO Trainer (email, userName, passHash) VALUES (%s, %s, %s)", (email, userName, passHash))
             stay["conn"].commit()
             cursor.close()
