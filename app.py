@@ -3,16 +3,12 @@ from flask import Flask, request, render_template, redirect, jsonify, url_for, m
 from http import HTTPStatus as status
 import mysql.connector as db
 import logging
-<<<<<<< HEAD
 import secrets
 import re
 import bcrypt
 import datetime
 import jwt
-=======
 import numpy
-import datetime
->>>>>>> Feat: Added basic functionality for catching pokemon for userid=1
 
 # Store application's state in this dictionary
 stay = {}
@@ -43,6 +39,11 @@ app = Flask(
     import_name="pokemonstay",
     static_url_path="/static",
 )
+
+def get_userid():
+    token = authenticate(request.cookies.get('access_token'))
+    return token.get('userid',None)
+
 
 @app.route("/myMon")
 def myMon():
@@ -343,19 +344,29 @@ def root():
 
 @app.route("/catch",methods=['GET','POST'])
 def catch_pokemon():
-    uid=1
+    uid=get_userid()
+    if uid is None:
+        return redirect(url_for('/',), code=302)
     shiny_rate=1/8192
+    last_catch_delta = datetime.timedelta(minutes=1)
+    '''
+    update_catch_query=("Update `Trainer` SET lastCatch=%s WHERE userid=%s")
+    update_catch_args=(datetime.datetime.now()-last_catch_delta,uid,)
+    cursor = stay["conn"].cursor(buffered=True)
+    cursor.execute(update_catch_query,update_catch_args)
+    cursor.close()
+    stay['conn'].commit()
+    '''
     def get_chance_weight(pokeNo):
         return 1
     def get_shiny_chance():
         return int(numpy.random.ranf()<shiny_rate)
     def get_gender_chance(pokeNo):
-        return numpy.rint(numpy.random.ranf())
+        return numpy.rint(numpy.random.ranf()*2)
     if request.method=="GET":
         msg = request.args.get('msg', None)
         # Should first check if available to catch
         #For now just use userid=1
-        last_catch_delta = datetime.timedelta(days=1)
         last_catch_query=("SELECT lastCatch FROM `Trainer` where userid=%s")
         last_catch_args=(uid,)
         cursor = stay["conn"].cursor(buffered=True)
@@ -366,7 +377,8 @@ def catch_pokemon():
             print(datetime.datetime.now().date())
         cursor.close()
         # tmp until lastCatch changes to datetime
-        last_catch_time = datetime.datetime.combine(last_catch_dict.get('lastCatch'), datetime.datetime.min.time())
+        # last_catch_time = datetime.datetime.combine(last_catch_dict.get('lastCatch'), datetime.datetime.min.time())
+        last_catch_time=last_catch_dict.get('lastCatch')
         time_left=last_catch_time+last_catch_delta-datetime.datetime.now()
         if time_left>datetime.timedelta(0):
             return render_template("/catch.html", msg=msg, can_catch=False, wait_time=str(time_left))
@@ -403,14 +415,12 @@ def catch_pokemon():
         #Need to pass pkmn id
         # Wait until datetime instead of date
         # Need to update catch time
-        '''
         update_catch_query=("Update `Trainer` SET lastCatch=%s WHERE userid=%s")
-        update_catch_args=(datetime.datetime.now()+last_catch_delta,uid,)
+        update_catch_args=(datetime.datetime.now(),uid,)
         cursor = stay["conn"].cursor(buffered=True)
         cursor.execute(update_catch_query,update_catch_args)
-        cursor.commit()
         cursor.close()
-        '''
+        stay['conn'].commit()
         #    Maybe include temporary reset button/route?
         return render_template("/catch.html", msg=msg, can_catch=True,mon_name=pkmn_name,mon_id=pkmn_id,is_shiny=pkmn_shiny,pkmn_gender=pkmn_gender)
     # Handle POST (caught pokemon)
@@ -426,7 +436,7 @@ def catch_pokemon():
         insert_catch_query=("INSERT INTO `owns` "
         "(pokemonNo, userid, level, gender, shiny, met, originalTrainerId) VALUES "
         "(%s,%s,%s,%s,%s,%s,%s)")
-        insert_catch_args=(pkmn_id,uid,dft_level, pkmn_gender, pkmn_shiny,datetime.datetime.now().date(),uid, )
+        insert_catch_args=(pkmn_id,uid,dft_level, pkmn_gender, pkmn_shiny,datetime.datetime.now(),uid, )
         cursor = stay["conn"].cursor(buffered=True)
         cursor.execute(insert_catch_query,insert_catch_args)
         cursor.close()
