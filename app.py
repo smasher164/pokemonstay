@@ -333,6 +333,5 @@ def auth():
 def root():
     token = authenticate(request.cookies.get('access_token'))
     if token is not None:
-        # Probably should have an index.html here.
         return render_template("index.html", token)
     return render_template("auth.html")
