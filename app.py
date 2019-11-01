@@ -44,7 +44,6 @@ def get_userid():
     token = authenticate(request.cookies.get('access_token'))
     return token.get('userid',None)
 
-
 @app.route("/myMon")
 def myMon():
     msg = request.args.get('msg', None)
