@@ -281,9 +281,6 @@ def auth():
         except Exception as err:
             return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
 
-        # Redirect to homepage
-        res = make_response(redirect('/'))
-
         # Set JWT
         exp = datetime.datetime.utcnow() + datetime.timedelta(days=1)
         token = jwt.encode({
