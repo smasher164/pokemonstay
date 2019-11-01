@@ -9,7 +9,6 @@ import bcrypt
 import datetime
 import jwt
 import numpy
-import datetime
 
 # Store application's state in this dictionary
 stay = {}
