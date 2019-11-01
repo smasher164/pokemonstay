@@ -378,6 +378,8 @@ def catch_pokemon():
         # tmp until lastCatch changes to datetime
         # last_catch_time = datetime.datetime.combine(last_catch_dict.get('lastCatch'), datetime.datetime.min.time())
         last_catch_time=last_catch_dict.get('lastCatch')
+        if last_catch_time is None:
+            last_catch_time=datetime.datetime.now()-last_catch_delta
         time_left=last_catch_time+last_catch_delta-datetime.datetime.now()
         if time_left>datetime.timedelta(0):
             return render_template("/catch.html", msg=msg, can_catch=False, wait_time=str(time_left))
