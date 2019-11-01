@@ -3,12 +3,17 @@ from flask import Flask, request, render_template, redirect, jsonify, url_for, m
 from http import HTTPStatus as status
 import mysql.connector as db
 import logging
+<<<<<<< HEAD
 import secrets
 import re
 import bcrypt
 import datetime
 import jwt
 import numpy
+=======
+import numpy
+import datetime
+>>>>>>> 33ea8b71a3f2e39e27d3177591b3c1778e34e21e
 
 # Store application's state in this dictionary
 stay = {}
@@ -43,6 +48,14 @@ app = Flask(
 def get_userid():
     token = authenticate(request.cookies.get('access_token'))
     return token.get('userid',None)
+<<<<<<< HEAD
+=======
+
+@app.route("/")
+def root():
+    return render_template("index.html")
+
+>>>>>>> 33ea8b71a3f2e39e27d3177591b3c1778e34e21e
 
 @app.route("/myMon")
 def myMon():
