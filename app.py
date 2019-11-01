@@ -9,6 +9,8 @@ import bcrypt
 import datetime
 import jwt
 import numpy
+import numpy
+import datetime
 
 # Store application's state in this dictionary
 stay = {}
@@ -43,6 +45,10 @@ app = Flask(
 def get_userid():
     token = authenticate(request.cookies.get('access_token'))
     return token.get('userid',None)
+
+@app.route("/")
+def root():
+    return render_template("index.html")
 
 @app.route("/myMon")
 def myMon():
