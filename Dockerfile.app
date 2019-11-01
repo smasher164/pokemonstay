@@ -21,9 +21,6 @@ RUN apk --update add --virtual build-dependencies libffi-dev openssl-dev build-b
     && pip install -r requirements.txt \
     && apk del build-dependencies
 
-# Download python dependencies.
-# RUN pip install -r requirements.txt
-
 # Copy everything in the current directory into /pokemonstay.
 COPY . /pokemonstay
 
