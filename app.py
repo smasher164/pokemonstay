@@ -46,10 +46,6 @@ def get_userid():
     token = authenticate(request.cookies.get('access_token'))
     return token.get('userid',None)
 
-@app.route("/")
-def root():
-    return render_template("index.html")
-
 @app.route("/myMon")
 def myMon():
     msg = request.args.get('msg', None)
@@ -354,14 +350,6 @@ def catch_pokemon():
         return redirect(url_for('/',), code=302)
     shiny_rate=1/8192
     last_catch_delta = datetime.timedelta(minutes=1)
-    '''
-    update_catch_query=("Update `Trainer` SET lastCatch=%s WHERE userid=%s")
-    update_catch_args=(datetime.datetime.now()-last_catch_delta,uid,)
-    cursor = stay["conn"].cursor(buffered=True)
-    cursor.execute(update_catch_query,update_catch_args)
-    cursor.close()
-    stay['conn'].commit()
-    '''
     def get_chance_weight(pokeNo):
         return 1
     def get_shiny_chance():
