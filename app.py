@@ -48,6 +48,9 @@ def get_userid():
 
 @app.route("/myMon")
 def myMon():
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirect(url_for('root'))
     msg = request.args.get('msg', None)
     #do a query based on user
     # display their pokemon nicknames with links to the pokedex page, rename, and release
@@ -56,7 +59,7 @@ def myMon():
             "WHERE userId = %s")
     #how do users work?
     # temporarily just doing with userid = 1 (testing all other shit)
-    uid = 1
+    uid = token.userid
     tup = (uid,)
     cursor.execute(query, tup)
     info = []
@@ -74,10 +77,13 @@ def myMon():
 
 @app.route("/release/<id>")
 def release(id):
+    token = authenticate(request.cookies.get('access_token'))
+    if toknen is None:
+        return redirect(url_for('root'))
     cursor = stay["conn"].cursor(prepared=True)
     # also make sure that the user owns this pokemon (via part of the query)
     # will have to adjust userId number later
-    uid = 1
+    uid = token.userid
     tup = (id,uid)
     query = ("SELECT pokemonNo, level, gender, speciesName, gender, shiny, met, nickname, ownsId FROM `owns` natural join `pokemon` "
             "Where ownsId = %s AND userId = %s")
@@ -110,12 +116,15 @@ def rename(id):
 
 @app.route("/rename/submit/<id>",methods=['GET','POST'])
 def rename_submit(id):
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirect(url_for('root'))
     if request.method == 'POST':
         nickname = request.form['nickname']
         cursor = stay["conn"].cursor(prepared=True)
         # also make sure that the user owns this pokemon (via part of the query)
         # will have to adjust userId number later
-        uid = 1
+        uid = token.userid
         tup = (id,uid)
         # returns 0 or 1 entries... 0 if user and mon mismatch or mon DNE... 1 if match
         query = ("SELECT pokemonNo, level, gender, speciesName, gender, shiny, met, nickname, ownsId FROM `owns` natural join `pokemon` "

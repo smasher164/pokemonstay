@@ -25,12 +25,12 @@
         </tr>
         {% for item in info %}
         <tr>
-            <th><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></th>
-            <th>{% if item.nickname %}
+            <td><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            <td>{% if item.nickname %}
                 {{ item.nickname }}
-            {% endif %}</th>
-            <th>{{ item.level }}</th>
-            <th>{% if item.gender == 0 %}
+            {% endif %}</td>
+            <td>{{ item.level }}</td>
+            <td>{% if item.gender == 0 %}
                 genderless
                 {% endif %}
                 {% if item.gender == 1 %}
@@ -39,16 +39,16 @@
                 {% if item.gender == 2 %}
                 male
                 {% endif %}
-            </th>
-            <th> {% if item.shiny == 0 %}
+            </td>
+            <td> {% if item.shiny == 0 %}
                 not shiny
                 {% endif %}
                 {% if item.shiny == 1 %}
                 shiny
-                {% endif %}</th>
-            <th>{{ item.met }}</th>
-            <th><a href="/rename/{{ item.ownsId }}">Rename Mon</a></th>
-            <th><a href="/release/{{ item.ownsId }}">Release Mon</a></th>
+                {% endif %}</td>
+            <td>{{ item.met }}</td>
+            <td><a href="/rename/{{ item.ownsId }}">Rename Mon</a></td>
+            <td><a href="/release/{{ item.ownsId }}">Release Mon</a></td>
         </tr>
         {% endfor %}
     {% endif %}
