@@ -59,7 +59,7 @@ def myMon():
             "WHERE userId = %s")
     #how do users work?
     # temporarily just doing with userid = 1 (testing all other shit)
-    uid = token.userid
+    uid = token["userid"]
     tup = (uid,)
     cursor.execute(query, tup)
     info = []
@@ -83,7 +83,7 @@ def release(id):
     cursor = stay["conn"].cursor(prepared=True)
     # also make sure that the user owns this pokemon (via part of the query)
     # will have to adjust userId number later
-    uid = token.userid
+    uid = token["userid"]
     tup = (id,uid)
     query = ("SELECT pokemonNo, level, gender, speciesName, gender, shiny, met, nickname, ownsId FROM `owns` natural join `pokemon` "
             "Where ownsId = %s AND userId = %s")
@@ -124,7 +124,7 @@ def rename_submit(id):
         cursor = stay["conn"].cursor(prepared=True)
         # also make sure that the user owns this pokemon (via part of the query)
         # will have to adjust userId number later
-        uid = token.userid
+        uid = token["userid"]
         tup = (id,uid)
         # returns 0 or 1 entries... 0 if user and mon mismatch or mon DNE... 1 if match
         query = ("SELECT pokemonNo, level, gender, speciesName, gender, shiny, met, nickname, ownsId FROM `owns` natural join `pokemon` "
