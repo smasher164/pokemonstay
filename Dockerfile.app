@@ -5,7 +5,7 @@
 
 # First specify the base image. We are using alpine
 # linux 3.10 with python 3.8 preinstalled.
-FROM py3-dep
+FROM smasher164/py3-dep
 
 # Set the current working directory inside the container to
 # /pokemonstay. If it doesn't exist, it will be created.
