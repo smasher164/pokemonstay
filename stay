@@ -53,10 +53,61 @@ function startapp() {
 	echo "Running application on localhost:${PORT}"
 }
 
+function startdebug() {
+	PORT=5000
+	DEBUG=True
+	DB_HOST=cs4750.cs.virginia.edu
+	DB_NAME=tl2rb
+	DB_USERNAME=tl2rb_a
+	JWT_SECRET=ljqLOhWzypKDhnejuiUeslqDlFYOSxiKRKD29oif9U8
+	for e in ${@:3}
+	do
+		case $e in
+			--port=*)
+				PORT="${e#*=}"
+				shift
+				;;
+			--debug=*)
+				DEBUG="${e#*=}"
+				shift
+				;;
+			--dbhost=*)
+				DB_HOST="${e#*=}"
+				shift
+				;;
+			--dbname=*)
+				DB_NAME="${e#*=}"
+				shift
+				;;
+			--dbuser=*)
+				DB_USERNAME="${e#*=}"
+				shift
+				;;
+			--dbpass=*)
+				DB_PASSWORD="${e#*=}"
+				shift
+				;;
+			--jwtsecret=*)
+				JWT_SECRET="${e#*=}"
+				shift
+				;;
+		esac
+	done
+	if [ -z "${DB_PASSWORD}" ]
+	then
+	      echo "Database password is not set. Set it with --dbpass"
+	      exit 1
+	fi
+	JWT_SECRET=${JWT_SECRET} FLASK_DEBUG=1 DEBUG=${DEBUG} DB_HOST=${DB_HOST} DB_NAME=${DB_NAME} DB_USERNAME=${DB_USERNAME} DB_PASSWORD=${DB_PASSWORD} flask run -p ${PORT}
+}
+
 function start() {
 	case $2 in
 		app)
 			startapp $@
+			;;
+		debug)
+			startdebug $@
 			;;
 	esac
 }
