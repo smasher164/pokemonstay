@@ -8,10 +8,21 @@ Most flags are optional, so you can simply run it with
 ```
 $ ./stay start app --dbpass=[DB_PASSWORD]
 ```
+The process can be shut down via
+```
+$ ./stay stop app
+```
+
+If the correct version of python and its dependencies are installed, run it locally without Docker via
+```
+$ ./stay start debug --dbpass=[DB_PASSWORD]
+```
 
 ### Development
 
-Development requires [Docker](https://www.docker.com/) to be installed on your local machine. Additionally, the shell script assumes that Unix shell commands can be run on your system. This can be updated to accomodate Windows users, but a Unix-like environment would be preferrable.
+For development builds to mirror the production environment, [Docker](https://www.docker.com/) should be installed on your local machine. Otherwise, simply use the debug command listed above, Additionally, the shell script assumes that Unix shell commands can be run on your system. This can be updated to accomodate Windows users, but a Unix-like environment would be preferrable.
+
+Installing Docker:
 - MacOS users: Install [Docker Community Edition (CE) for Mac](https://docs.docker.com/v17.12/docker-for-mac/install/)
 - Linux users: Install [Docker Community Edition (CE) for your distro](https://docs.docker.com/v17.12/install/#server)
 - Windows users: (Please file an issue if you encounter any problems with the process below)
@@ -23,4 +34,4 @@ Development requires [Docker](https://www.docker.com/) to be installed on your l
 
 This repository is set up to deploy on commit to master. The deployment process's log can be observed under the "Production Deployment" workflow in the Actions tab of the repo.
 
-The Docker image we are currently using is based on the latest Python 3.8 beta as well as Alpine Linux 3.10.
+The Docker image we are currently using is based on the latest Python 3.8 as well as Alpine Linux 3.10.

@@ -4,7 +4,7 @@
 # finish by committing itself into a new image.
 
 # First specify the base image. We are using alpine
-# linux 3.10 with python 3.8 preinstalled.
+# linux 3.10 with python 3.8, bcrypt, and numpy preinstalled.
 FROM smasher164/py3-dep
 
 # Set the current working directory inside the container to
