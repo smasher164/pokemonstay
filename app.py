@@ -80,7 +80,7 @@ def myMon():
             item['nickname'] = str(item['nickname'],'utf-8')
     size = len(info)
     cursor.close()
-    return clearref(render_template("/myMon.html", info=info, size=size, msg=msg))
+    return render_template("/myMon.html", info=info, size=size, msg=msg)
 
 
 @app.route("/release/<id>")
@@ -115,14 +115,14 @@ def release(id):
         stay["conn"].commit()
 
     cursor.close()
-    return clearref(redirect(url_for('myMon',msg=msg), code=status.FOUND))
+    return redirect(url_for('myMon',msg=msg), code=status.FOUND)
 
 @app.route("/rename/<id>")
 def rename(id):
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
         return redirback(url_for('root'))
-    return clearref(render_template("/rename.html", id=id))
+    return render_template("/rename.html", id=id)
 
 @app.route("/rename/submit/<id>",methods=['GET','POST'])
 def rename_submit(id):
@@ -161,9 +161,9 @@ def rename_submit(id):
 
         cursor.close()
 
-        return clearref(redirect(url_for('myMon',msg=msg), code=status.FOUND))
+        return redirect(url_for('myMon',msg=msg), code=status.FOUND)
 
-    return clearref(redirect(url_for('myMon',msg="bad url"), code=status.FOUND))
+    return redirect(url_for('myMon',msg="bad url"), code=status.FOUND)
 
 @app.route("/pokedex")
 def dexMain_view():
@@ -195,7 +195,7 @@ def dexMain_view():
             result.append(item)
             i+=1 
     cursor.close()
-    return clearref(render_template("/dexmain.html", info=result))
+    return render_template("/dexmain.html", info=result)
 
 @app.route("/dex/<id>")
 def dex_view(id):
@@ -231,7 +231,7 @@ def dex_view(id):
         item['typeName'] = str(info[i]['typeName'],'utf-8')
         result.append(item) 
     cursor.close()
-    return clearref(render_template("/dex.html", info=result))
+    return render_template("/dex.html", info=result)
 
 # Pre-compile password validation regexes
 valid_password = [
@@ -407,7 +407,7 @@ def catch_pokemon():
             last_catch_time=datetime.datetime.now()-last_catch_delta
         time_left=last_catch_time+last_catch_delta-datetime.datetime.now()
         if time_left>datetime.timedelta(0):
-            return clearref(render_template("/catch.html", msg=msg, can_catch=False, wait_time=str(time_left)))
+            return render_template("/catch.html", msg=msg, can_catch=False, wait_time=str(time_left))
 
         # Now find new rand pokemon
         msg = request.args.get('msg', None)
@@ -448,7 +448,7 @@ def catch_pokemon():
         cursor.close()
         stay['conn'].commit()
         #    Maybe include temporary reset button/route?
-        return clearref(render_template("/catch.html", msg=msg, can_catch=True,mon_name=pkmn_name,mon_id=pkmn_id,is_shiny=pkmn_shiny,pkmn_gender=pkmn_gender))
+        return render_template("/catch.html", msg=msg, can_catch=True,mon_name=pkmn_name,mon_id=pkmn_id,is_shiny=pkmn_shiny,pkmn_gender=pkmn_gender)
     # Handle POST (caught pokemon)
     else:
         dft_level=1
@@ -467,7 +467,7 @@ def catch_pokemon():
         cursor.execute(insert_catch_query,insert_catch_args)
         cursor.close()
         stay['conn'].commit()
-        return clearref(redirect(url_for('myMon',msg=None), code=status.FOUND))
+        return redirect(url_for('myMon',msg=None), code=status.FOUND)
 
 @app.route("/")
 def root():
@@ -480,5 +480,5 @@ def root():
                 to = ref
         except:
             pass
-        return redirect(to, code=status.FOUND)
+        return clearref(redirect(to, code=status.FOUND))
     return render_template("auth.html")
