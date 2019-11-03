@@ -46,12 +46,13 @@ app = Flask(
 
 def redirback(u):
     res = make_response(redirect(u))
-    res.set_cookie('referrer', request.path)
+    exp = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+    res.set_cookie('referrer', value=request.path, expires=exp, httponly=True)
     return res
 
 def clearref(r):
     res = make_response(r)
-    res.set_cookie('referrer', value='', expires=0)
+    res.set_cookie('referrer', value='', expires=0, httponly=True)
     return res
 
 @app.route("/myMon")
