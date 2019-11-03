@@ -4,3 +4,4 @@ mysql-connector
 pyjwt
 bcrypt
 numpy
+email_validator
