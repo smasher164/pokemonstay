@@ -78,7 +78,7 @@ def myMon():
 @app.route("/release/<id>")
 def release(id):
     token = authenticate(request.cookies.get('access_token'))
-    if toknen is None:
+    if token is None:
         return redirect(url_for('root'))
     cursor = stay["conn"].cursor(prepared=True)
     # also make sure that the user owns this pokemon (via part of the query)
