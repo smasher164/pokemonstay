@@ -13,6 +13,7 @@
 !*.html
 !*.css
 !*.js
+!*.png
 !.gitignore
 
 # Whitelist the following files
