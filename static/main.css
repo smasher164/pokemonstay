@@ -41,3 +41,7 @@ header {
 header img {
     width: 300px;
 }
+
+.invalid-input {
+    border: solid 2px red;
+}

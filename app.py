@@ -2,6 +2,7 @@ import os
 from flask import Flask, request, render_template, redirect, jsonify, url_for, make_response
 from http import HTTPStatus as status
 import mysql.connector as db
+from email_validator import validate_email
 import logging
 import secrets
 import re
@@ -284,6 +285,12 @@ def auth():
         except Exception as err:
             return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
 
+        # Validate email
+        try:
+            validate_email(email)
+        except:
+            return make_response(jsonify({'err': 'Invalid email'}), status.BAD_REQUEST)
+
         (userid, passHash) = row
         if not bcrypt.checkpw(password.encode('utf-8'), passHash.encode('utf-8')):
             return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
@@ -323,6 +330,12 @@ def auth():
                 return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
         except:
             return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+
+        # Validate email
+        try:
+            validate_email(email)
+        except:
+            return make_response(jsonify({'err': 'Invalid email'}), status.BAD_REQUEST)
 
         # Validate username
         if not valid_userName.match(userName):
