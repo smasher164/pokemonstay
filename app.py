@@ -1,8 +1,9 @@
 import os
 from flask import Flask, request, render_template, redirect, jsonify, url_for, make_response
 from http import HTTPStatus as status
-import mysql.connector as db
 from email_validator import validate_email
+from urllib.parse import urlparse
+import mysql.connector as db
 import logging
 import secrets
 import re
@@ -43,15 +44,21 @@ app = Flask(
     static_url_path="/static",
 )
 
-def get_userid():
-    token = authenticate(request.cookies.get('access_token'))
-    return token.get('userid',None)
+def redirback(u):
+    res = make_response(redirect(u))
+    res.set_cookie('referrer', request.path)
+    return res
+
+def clearref(r):
+    res = make_response(r)
+    res.set_cookie('referrer', value='', expires=0)
+    return res
 
 @app.route("/myMon")
 def myMon():
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
-        return redirect(url_for('root'))
+        return redirback(url_for('root'))
     msg = request.args.get('msg', None)
     #do a query based on user
     # display their pokemon nicknames with links to the pokedex page, rename, and release
@@ -73,14 +80,14 @@ def myMon():
             item['nickname'] = str(item['nickname'],'utf-8')
     size = len(info)
     cursor.close()
-    return render_template("/myMon.html", info=info, size=size, msg=msg)
+    return clearref(render_template("/myMon.html", info=info, size=size, msg=msg))
 
 
 @app.route("/release/<id>")
 def release(id):
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
-        return redirect(url_for('root'))
+        return redirback(url_for('root'))
     cursor = stay["conn"].cursor(prepared=True)
     # also make sure that the user owns this pokemon (via part of the query)
     # will have to adjust userId number later
@@ -108,18 +115,20 @@ def release(id):
         stay["conn"].commit()
 
     cursor.close()
-
-    return redirect(url_for('myMon',msg=msg), code=status.FOUND)
+    return clearref(redirect(url_for('myMon',msg=msg), code=status.FOUND))
 
 @app.route("/rename/<id>")
 def rename(id):
-    return render_template("/rename.html", id=id)
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirback(url_for('root'))
+    return clearref(render_template("/rename.html", id=id))
 
 @app.route("/rename/submit/<id>",methods=['GET','POST'])
 def rename_submit(id):
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
-        return redirect(url_for('root'))
+        return redirback(url_for('root'))
     if request.method == 'POST':
         nickname = request.form['nickname']
         cursor = stay["conn"].cursor(prepared=True)
@@ -152,12 +161,15 @@ def rename_submit(id):
 
         cursor.close()
 
-        return redirect(url_for('myMon',msg=msg), code=status.FOUND)
+        return clearref(redirect(url_for('myMon',msg=msg), code=status.FOUND))
 
-    return redirect(url_for('myMon',msg="bad url"), code=status.FOUND)
+    return clearref(redirect(url_for('myMon',msg="bad url"), code=status.FOUND))
 
 @app.route("/pokedex")
 def dexMain_view():
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirback(url_for('root'))
     cursor = stay["conn"].cursor(prepared=True)
     query = ("SELECT pokemonNo, speciesName, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types ORDER By pokemonNo")
     cursor.execute(query)
@@ -183,10 +195,13 @@ def dexMain_view():
             result.append(item)
             i+=1 
     cursor.close()
-    return render_template("/dexmain.html", info=result)
+    return clearref(render_template("/dexmain.html", info=result))
 
 @app.route("/dex/<id>")
 def dex_view(id):
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirback(url_for('root'))
     cursor = stay["conn"].cursor(prepared=True)
     # at most one match
     query = ("SELECT speciesName, pokemonNo, height, weight, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types Where pokemonNo=%s ORDER By pokemonNo")
@@ -216,7 +231,7 @@ def dex_view(id):
         item['typeName'] = str(info[i]['typeName'],'utf-8')
         result.append(item) 
     cursor.close()
-    return render_template("/dex.html", info=result)
+    return clearref(render_template("/dex.html", info=result))
 
 # Pre-compile password validation regexes
 valid_password = [
@@ -360,9 +375,10 @@ def auth():
 
 @app.route("/catch",methods=['GET','POST'])
 def catch_pokemon():
-    uid=get_userid()
-    if uid is None:
-        return redirect(url_for('root'), code=status.FOUND)
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirback(url_for('root'))
+    uid=token["userid"]
     shiny_rate=1/8192
     last_catch_delta = datetime.timedelta(minutes=1)
     def get_chance_weight(pokeNo):
@@ -391,7 +407,7 @@ def catch_pokemon():
             last_catch_time=datetime.datetime.now()-last_catch_delta
         time_left=last_catch_time+last_catch_delta-datetime.datetime.now()
         if time_left>datetime.timedelta(0):
-            return render_template("/catch.html", msg=msg, can_catch=False, wait_time=str(time_left))
+            return clearref(render_template("/catch.html", msg=msg, can_catch=False, wait_time=str(time_left)))
 
         # Now find new rand pokemon
         msg = request.args.get('msg', None)
@@ -432,7 +448,7 @@ def catch_pokemon():
         cursor.close()
         stay['conn'].commit()
         #    Maybe include temporary reset button/route?
-        return render_template("/catch.html", msg=msg, can_catch=True,mon_name=pkmn_name,mon_id=pkmn_id,is_shiny=pkmn_shiny,pkmn_gender=pkmn_gender)
+        return clearref(render_template("/catch.html", msg=msg, can_catch=True,mon_name=pkmn_name,mon_id=pkmn_id,is_shiny=pkmn_shiny,pkmn_gender=pkmn_gender))
     # Handle POST (caught pokemon)
     else:
         dft_level=1
@@ -451,11 +467,18 @@ def catch_pokemon():
         cursor.execute(insert_catch_query,insert_catch_args)
         cursor.close()
         stay['conn'].commit()
-        return redirect(url_for('myMon',msg=None), code=status.FOUND)
+        return clearref(redirect(url_for('myMon',msg=None), code=status.FOUND))
 
 @app.route("/")
 def root():
     token = authenticate(request.cookies.get('access_token'))
     if token is not None:
-        return redirect(url_for('catch_pokemon'), code=status.FOUND)
+        to = url_for('catch_pokemon')
+        try:
+            ref = request.cookies.get('referrer')
+            if len(ref) != 0:
+                to = ref
+        except:
+            pass
+        return redirect(to, code=status.FOUND)
     return render_template("auth.html")
