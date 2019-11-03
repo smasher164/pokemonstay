@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
 <title>My Mon</title>
+<link href="/static/main.css" rel="stylesheet">
 </head>
 <body>
+    {% include 'header.html' %}
+    {% include 'nav.html' %}
     <h1>My Mon</h1>
     {% if msg %}
     <p><font color="red">{{ msg }}</font></p>

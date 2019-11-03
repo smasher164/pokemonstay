@@ -7,9 +7,7 @@
         <link href="/static/main.css" rel="stylesheet">
     </head>
     <body>
-        <header>
-            <h1>Pokémon Stay</h1>
-        </header>
+        {% include 'header.html' %}
         <main>
             <auth>
                 <button id="toggle-signin">Sign in</button>
@@ -35,6 +33,15 @@
             let btnSubmit = document.querySelector("#btn-submit")
             let message = document.querySelector(".message")
 
+            document.querySelectorAll("input").forEach(input =>
+                input.addEventListener("keyup", e => {
+                    // On Enter Key
+                    if (e.keyCode == 13) {
+                        e.preventDefault()
+                        btnSubmit.click()
+                    }
+                })
+            )
             toggleSignIn.addEventListener('click', e => {
                 isRegister = false
                 message.textContent = ""
