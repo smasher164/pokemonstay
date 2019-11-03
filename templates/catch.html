@@ -8,6 +8,8 @@
         <link href="/static/main.css" rel="stylesheet">
     </head>
     <body>
+        {% include 'header.html' %}
+        {% include 'nav.html' %}
         {% if msg %}
         <p><font color="red">{{ msg }}</font></p>
         {% endif %}

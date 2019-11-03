@@ -2,8 +2,11 @@
 <html lang="en">
 <head>
 <title>Rename</title>
+<link href="/static/main.css" rel="stylesheet">
 </head>
 <body>
+    {% include 'header.html' %}
+    {% include 'nav.html' %}
     <h1>Rename mon {{ id }}</h1>
     <form action="/rename/submit/{{ id }}" method="POST">
         New Nickname: <input type="text" name="nickname" maxlength="20"><br>

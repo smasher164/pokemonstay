@@ -33,3 +33,11 @@ auth-form .message {
 .hide-register {
     display: none;
 }
+
+header {
+    text-align: center;
+}
+
+header img {
+    width: 300px;
+}
