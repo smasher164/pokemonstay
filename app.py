@@ -108,7 +108,7 @@ def release(id):
 
     cursor.close()
 
-    return redirect(url_for('myMon',msg=msg), code=302)
+    return redirect(url_for('myMon',msg=msg), code=status.FOUND)
 
 @app.route("/rename/<id>")
 def rename(id):
@@ -151,9 +151,9 @@ def rename_submit(id):
 
         cursor.close()
 
-        return redirect(url_for('myMon',msg=msg), code=302)
+        return redirect(url_for('myMon',msg=msg), code=status.FOUND)
 
-    return redirect(url_for('myMon',msg="bad url"), code=302)
+    return redirect(url_for('myMon',msg="bad url"), code=status.FOUND)
 
 @app.route("/pokedex")
 def dexMain_view():
@@ -345,18 +345,11 @@ def auth():
             return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
     return res
 
-@app.route("/")
-def root():
-    token = authenticate(request.cookies.get('access_token'))
-    if token is not None:
-        return render_template("index.html", token=token)
-    return render_template("auth.html")
-
 @app.route("/catch",methods=['GET','POST'])
 def catch_pokemon():
     uid=get_userid()
     if uid is None:
-        return redirect(url_for('/',), code=302)
+        return redirect(url_for('root'), code=status.FOUND)
     shiny_rate=1/8192
     last_catch_delta = datetime.timedelta(minutes=1)
     def get_chance_weight(pokeNo):
@@ -445,5 +438,11 @@ def catch_pokemon():
         cursor.execute(insert_catch_query,insert_catch_args)
         cursor.close()
         stay['conn'].commit()
+        return redirect(url_for('myMon',msg=None), code=status.FOUND)
 
-        return redirect(url_for('myMon',msg=None), code=302)
+@app.route("/")
+def root():
+    token = authenticate(request.cookies.get('access_token'))
+    if token is not None:
+        return redirect(url_for('catch_pokemon'), code=status.FOUND)
+    return render_template("auth.html")
