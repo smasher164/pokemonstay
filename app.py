@@ -2,7 +2,6 @@ import os
 from flask import Flask, request, render_template, redirect, jsonify, url_for, make_response
 from http import HTTPStatus as status
 from email_validator import validate_email
-from urllib.parse import urlparse
 import mysql.connector as db
 import logging
 import secrets
