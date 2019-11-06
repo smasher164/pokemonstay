@@ -548,3 +548,111 @@ def root():
             pass
         return clearref(redirect(to, code=status.FOUND))
     return render_template("auth.html")
+
+@app.route("/train/submit/<id>", methods=['GET', 'POST'])
+def trained(id):
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirback(url_for('root'))
+    uid = token['userid']
+    if request.method == 'POST':
+        msg=""
+        clicks = int(request.form['clicks'])
+        cursor = stay["conn"].cursor(prepared=True)
+        query = ("SELECT speciesName, level, gender, nickname, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId = %s")
+        tup = (id,uid)
+        #Query returns either a single row or nothing if ownsId is invalid
+        cursor.execute(query, tup)
+        info = []
+        result = []
+        columns = tuple( [d[0] for d in cursor.description] )
+        for row in cursor:
+            info.append(dict(zip(columns, row)))
+        size = len(info)
+        if (size == 0):
+            msg = "Train... that mon does not exist or it does not belong to you!"
+            return redirect(url_for('myMon',msg=msg), code=status.FOUND)
+        item = {}
+        item['speciesName'] = str(info[0]['speciesName'], 'utf-8')
+        item['exp'] = info[0]['exp'] + (clicks * 5)
+        lvlinc = getlevel(info[0]['level'],item['exp'])
+        item['level'] = info[0]['level'] + lvlinc
+        if item['level'] >= 100:
+            item['level'] = 100
+        item['gender'] = info[0]['gender']
+        if info[0]['nickname'] is not None:
+            item['nickname'] = str(info[0]['nickname'], 'utf-8')
+        item['id'] = id
+        expNeeded = pow(info[0]['level'] + 1, 3) - info[0]['exp']
+        item['expNeeded'] = expNeeded
+        result.append(item)
+        query = ("UPDATE `owns` SET `exp`=%s, `level`=%s WHERE `ownsId`=%s")
+        #cursor.execute(query, (item['exp'],id))
+        #stay["conn"].commit()
+        #query = ("UPDATE `owns` SET `level`=%s WHERE `ownsId`=%s")
+        cursor.execute(query, (item['exp'],item['level'],id))
+        stay["conn"].commit()
+        if lvlinc > 0:
+            if info[0]['nickname'] is not None:
+                msg = item['nickname'] + " has leveled up to level " + str(item['level'])
+            else:
+                msg = item['speciesName'] + " has leveled up to level " + str(item['level'])
+        cursor.close()
+        #return render_template("/train.html", info=result, msg=msg)
+        return redirect(url_for('train',id=id, info=result, msg=msg), code=status.FOUND)
+
+
+    return redirect(url_for('myMon',msg="bad url"), code=status.FOUND)
+
+@app.route("/train/<id>", methods=['GET', 'POST'])
+def train(id):
+    msg = request.args.get('msg', None)
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirback(url_for('root'))
+    uid = token['userid']
+    cursor = stay["conn"].cursor(prepared=True)
+    query = ("SELECT speciesName, level, gender, nickname, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId=%s")
+    tup = (id,uid)
+    #Query returns either a single row or nothing if ownsId is invalid
+    cursor.execute(query, tup)
+    info = []
+    result = []
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    size = len(info)
+    if size==0:
+        msg = "Something isn't right, this mon doesn't exist or you do not own that mon"
+        return redirect(url_for('myMon',msg=msg), code=status.FOUND)
+    else:
+        item = {}
+        item['speciesName'] = str(info[0]['speciesName'], 'utf-8')
+        item['level'] = info[0]['level']
+        item['gender'] = info[0]['gender']
+        if info[0]['nickname'] is not None:
+            item['nickname'] = str(info[0]['nickname'], 'utf-8')
+        item['exp'] = info[0]['exp']
+        item['id'] = id
+
+        expNeeded = pow(info[0]['level'] + 1, 3) - info[0]['exp']
+        item['expNeeded'] = expNeeded
+
+        result.append(item)
+    cursor.close()
+    return render_template("/train.html", info=result, msg=msg)
+
+
+
+
+
+def getlevel(lvl,exp):
+    gain=0
+    count=1
+    if pow((lvl+count),3) < exp:
+        gain = 1
+        count+=1
+        while pow(lvl+count, 3) < exp:
+            gain+=1
+            count+=1
+    return gain

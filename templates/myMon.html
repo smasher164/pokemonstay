@@ -25,6 +25,7 @@
           <th>Met</th>
           <th>Rename?</th>
           <th>Release?</th>
+          <th>Train?</th>
         </tr>
         {% for item in info %}
         <tr>
@@ -52,6 +53,7 @@
             <td>{{ item.met }}</td>
             <td><a href="/rename/{{ item.ownsId }}">Rename Mon</a></td>
             <td><a href="/release/{{ item.ownsId }}">Release Mon</a></td>
+            <td><a href="/train/{{ item.ownsId }}">Train Mon</a></td>
         </tr>
         {% endfor %}
     {% endif %}
