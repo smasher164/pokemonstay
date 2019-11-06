@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+        <meta name="Description" content="Train your Pokemon">
+        <title>Pokémon Stay | Train your Pokémon</title>
+        <link href="/static/main.css" rel="stylesheet">
+    </head>
+
+    <body>
+        {% include 'header.html' %}
+        {% include 'nav.html' %}
+        <h1>Train your Pokémon</h1>
+        {% if msg %}
+        <p><font color="red">{{ msg }}</font></p>
+        {% endif %}
+        {% if info %}
+        <p>
+            {% if info[0].nickname %}
+            You're training {{ info[0].nickname }} the {{ info[0].speciesName }}.
+            {% else %}
+            You're training your {{ info[0].speciesName }}.
+            {% endif %} 
+            {% if info[0].gender == 0 %} They are {% endif %}
+            {% if info[0].gender == 1 %} She is {% endif %}
+            {% if info[0].gender == 2 %} He is {% endif %}
+            currently level {{ info[0].level }} and needs {{ info[0].expNeeded }} experience points to level up.     
+                   
+        </p>
+        <input name="owns_id" id="ownid" type="hidden" value="{{info[0].id}}"/>
+        {% endif %}
+        <p id="clicknumber">You have clicked 0 times</p>
+        <button id="train-Train">Train</button>
+        <form action="/train/submit/{{ info[0].id }}" method="POST">
+        <input id="clicks" name="clicks" type="hidden" value=0/>
+        <button id="train-Submit">Submit</button>
+        </form>
+        
+    </body>
+
+    <script type="text/javascript">
+        var counter = 0
+        document.querySelector("#train-Train").addEventListener('click', e => {
+            counter = counter + 1
+            document.getElementById("clicknumber").textContent = "You have clicked " + counter + " times"
+            document.getElementById("clicks").value = counter
+        }) 
+    </script>
+</html>
