@@ -219,16 +219,17 @@ def dex_view(id):
         item['pokemonNo'] = info[i]['pokemonNo']
         item['height'] = info[i]['height'] / 10
         item['weight'] = info[i]['weight'] / 10
+        #https://www.serebii.net/pokedex-bw/type/fighting.gif
         item['speciesName'] = str(info[i]['speciesName'],'utf-8')
-        item['typeName'] = str(info[i]['typeName'],'utf-8')
-        item['typeName2'] = str(info[i+1]['typeName'],'utf-8')
+        item['typeName'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i]['typeName'],'utf-8')+".gif"
+        item['typeName2'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i+1]['typeName'],'utf-8')+".gif"
         result.append(item)
     else:
         item['pokemonNo'] = info[i]['pokemonNo']
         item['height'] = info[i]['height'] / 10
         item['weight'] = info[i]['weight'] / 10
         item['speciesName'] = str(info[i]['speciesName'],'utf-8')
-        item['typeName'] = str(info[i]['typeName'],'utf-8')
+        item['typeName'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i]['typeName'],'utf-8')+".gif"
         result.append(item) 
     cursor.close()
     return render_template("/dex.html", info=result)
