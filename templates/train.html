@@ -16,6 +16,25 @@
         <p><font color="red">{{ msg }}</font></p>
         {% endif %}
         {% if info %}
+        {% if info[0].pokemonNo < 10 %}
+        {% if info[0].shiny == 0 %}
+            <img src="https://www.serebii.net/sunmoon/pokemon/00{{info[0].pokemonNo}}.png" width=200 height=200>
+        {% else %}
+            <img src="https://www.serebii.net/Shiny/SM/00{{info[0].pokemonNo}}.png" width=200 height=200>
+        {% endif %}
+        {% elif info[0].pokemonNo < 100 %}
+        {% if info[0].shiny == 0 %}
+            <img src="https://www.serebii.net/sunmoon/pokemon/0{{info[0].pokemonNo}}.png" width=200 height=200>
+        {% else %}
+            <img src="https://www.serebii.net/Shiny/SM/0{{info[0].pokemonNo}}.png" width=200 height=200>
+        {% endif %}
+        {% else %}
+        {% if info[0].shiny == 0 %}     
+                <img src="https://www.serebii.net/sunmoon/pokemon/{{info[0].pokemonNo}}.png" width=200 height=200>
+        {% else %}
+                <img src="https://www.serebii.net/Shiny/SM/{{info[0].pokemonNo}}.png" width=200 height=200>
+            {% endif %}
+        {% endif %}
         <p>
             {% if info[0].nickname %}
             You're training {{ info[0].nickname }} the {{ info[0].speciesName }}.
@@ -25,7 +44,11 @@
             {% if info[0].gender == 0 %} They are {% endif %}
             {% if info[0].gender == 1 %} She is {% endif %}
             {% if info[0].gender == 2 %} He is {% endif %}
-            currently level {{ info[0].level }} and needs {{ info[0].expNeeded }} experience points to level up.     
+            {% if info[0].level == 100 %}
+            currently level {{ info[0].level }}.
+            {% else %}
+            currently level {{ info[0].level }} and needs {{ info[0].expNeeded }} experience points to level up.   
+            {% endif %}  
                    
         </p>
         <input name="owns_id" id="ownid" type="hidden" value="{{info[0].id}}"/>

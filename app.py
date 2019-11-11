@@ -493,7 +493,7 @@ def trained(id):
         msg=""
         clicks = int(request.form['clicks'])
         cursor = stay["conn"].cursor(prepared=True)
-        query = ("SELECT speciesName, level, gender, nickname, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId = %s")
+        query = ("SELECT pokemonNo, speciesName, level, gender, nickname, shiny, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId = %s")
         tup = (id,uid)
         #Query returns either a single row or nothing if ownsId is invalid
         cursor.execute(query, tup)
@@ -507,6 +507,8 @@ def trained(id):
             msg = "Train... that mon does not exist or it does not belong to you!"
             return redirect(url_for('myMon',msg=msg), code=status.FOUND)
         item = {}
+        item['pokemonNo'] = info[0]['pokemonNo']
+        item['shiny'] = info[0]['shiny']
         item['speciesName'] = str(info[0]['speciesName'], 'utf-8')
         item['exp'] = info[0]['exp'] + (clicks * 5)
         lvlinc = getlevel(info[0]['level'],item['exp'])
@@ -546,7 +548,7 @@ def train(id):
         return redirback(url_for('root'))
     uid = token['userid']
     cursor = stay["conn"].cursor(prepared=True)
-    query = ("SELECT speciesName, level, gender, nickname, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId=%s")
+    query = ("SELECT pokemonNo, speciesName, level, gender, nickname, shiny, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId=%s")
     tup = (id,uid)
     #Query returns either a single row or nothing if ownsId is invalid
     cursor.execute(query, tup)
@@ -561,9 +563,11 @@ def train(id):
         return redirect(url_for('myMon',msg=msg), code=status.FOUND)
     else:
         item = {}
+        item['pokemonNo'] = info[0]['pokemonNo']
         item['speciesName'] = str(info[0]['speciesName'], 'utf-8')
         item['level'] = info[0]['level']
         item['gender'] = info[0]['gender']
+        item['shiny'] = info[0]['shiny']
         if info[0]['nickname'] is not None:
             item['nickname'] = str(info[0]['nickname'], 'utf-8')
         item['exp'] = info[0]['exp']
