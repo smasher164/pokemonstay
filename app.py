@@ -404,34 +404,23 @@ def rand_pkmn():
     pkmn_id = pokemon_ids[wild_pkmn_idx]
     return (pkmn_id,pkmn_name)
     
-    
-'''
-def pkmn_id_to_name(pid):
-    cursor = stay["conn"].cursor(buffered=True)
-    query = ("SELECT speciesName FROM `pokemon` where pokemonNo=%s")
-    args = (pid,)
-    cursor.execute(query,args)
-    pkmn_name=""
-    # Needs refactoring;
-    for row in cursor:
-        pkmn_name=row[0]
-    cursor.close()
-    return pkmn_name
-'''
 
 # Returns tuple (pkmn_id,pkmn_name)
 # Probably needs to be refactored/optimized later
 def get_catchable(uid):
-    cursor = stay["conn"].cursor(buffered=True)
-    query = ("SELECT pokemonNo,speciesName FROM `catchable` NATURAL JOIN `pokemon` where userid=%s")
-    args = (uid,)
-    cursor.execute(query,args)
-    pkmn_id,pkmn_name=None,None
-    #probably needs refactoring
-    for pkmn in cursor:
-        pkmn_id,pkmn_name=pkmn[0],pkmn[1]
-    cursor.close()
-    return (pkmn_id,pkmn_name)
+    try:
+        cursor = stay["conn"].cursor(buffered=True)
+        query = ("SELECT pokemonNo,speciesName,level,gender,shiny FROM `catchable` NATURAL JOIN `pokemon` where userid=%s")
+        args = (uid,)
+        cursor.execute(query,args)
+
+        columns = tuple( [d[0] for d in cursor.description] )
+        info = (dict(zip(columns, cursor.fetchone())))
+        cursor.close()
+        return info
+    except Exception as err:
+        print('catch ',err)
+        return None
 
 # Expects a datetime.timedelta object
 # Need to make more robust
@@ -441,99 +430,117 @@ def format_catch_time(d):
     minutes, seconds = divmod(remainder, 60)
     return '{:02} Hours, {:02} Minutes, {:02} seconds'.format(int(hours), int(minutes), int(seconds))
 
+# Returns the amount of time left until the user's last catch expires
+def last_catch_expire(uid,expiration_duration):
+    last_encounter_query=("SELECT lastCatch FROM `Trainer` where userid=%s")
+    last_encounter_args=(uid,)
+    cursor = stay["conn"].cursor(buffered=True)
+    cursor.execute(last_encounter_query,last_encounter_args)
+    columns = tuple( [d[0] for d in cursor.description] )
+    last_encounter_dict=dict(zip(columns, cursor.fetchone()))
+    cursor.close()
+    last_encounter_time=last_encounter_dict.get('lastCatch')
+    if last_encounter_time is None:
+        last_encounter_time=datetime.datetime.now()-expiration_duration
+    time_left=last_encounter_time+expiration_duration-datetime.datetime.now()
+    return time_left
+
+
 @app.route("/catch",methods=['GET','POST'])
-def catch_pokemon():
+def catch():
     token = authenticate(request.cookies.get('access_token'))
+    shiny_rate=1/8192
+    last_encounter_delta= datetime.timedelta(minutes=1)
     if token is None:
         return redirback(url_for('root'))
     uid=token["userid"]
-    last_encounter_delta = datetime.timedelta(minutes=1)
     def get_shiny_chance():
         return int(numpy.random.ranf()<shiny_rate)
     def get_gender_chance(pokeNo):
         return numpy.rint(numpy.random.ranf()*3)
     if request.method=="GET":
-        msg = request.args.get('msg', None)
-        # Should first check if available to catch new pokemon
-        last_encounter_query=("SELECT lastCatch FROM `Trainer` where userid=%s")
-        last_encounter_args=(uid,)
-        cursor = stay["conn"].cursor(buffered=True)
-        cursor.execute(last_encounter_query,last_encounter_args)
-        columns = tuple( [d[0] for d in cursor.description] )
-        for x in cursor:
-            last_encounter_dict=dict(zip(columns, x))
-        cursor.close()
-        last_encounter_time=last_encounter_dict.get('lastCatch')
-        if last_encounter_time is None:
-            last_encounter_time=datetime.datetime.now()-last_encounter_delta
-        time_left=last_encounter_time+last_encounter_delta-datetime.datetime.now()
-        pkmn_id, pkmn_name=-1,None
-        # If user is eligible for new catch, get new pkmn
-        if time_left<=datetime.timedelta(0):
-            # Find new random pokemon
-            pkmn_id,pkmn_name=rand_pkmn()
-            #Need to pass pkmn id
-            #Need to delete old encounters and add new one
-            delete_encounter_query=("DELETE FROM `catchable` WHERE userid=%s")
-            delete_encounter_args=(uid,)
-            insert_encounter_query=("INSERT INTO `catchable` (userid,pokemonNo) VALUES "
-            "(%s,%s)")
-            insert_encounter_args=(uid,pkmn_id,)
+        try:
+            raise Exception("Get smacked")
+            msg = request.args.get('msg', None)
+            # First check if available to catch new pokemon
+            time_left=last_catch_expire(uid,last_encounter_delta)
+            pkmn_info={}
+            # If user is eligible for new catch, get new pkmn
+            if time_left<=datetime.timedelta(0):
+                # Find new random pokemon
+                pkmn_id,pkmn_name=rand_pkmn()
+                pkmn_gender=str(get_gender_chance(pkmn_id))
+                pkmn_shiny=str(get_shiny_chance())
+                pkmn_level=str(1)
+                #Need to pass pkmn id
+                #Need to delete old encounters and add new one
+                delete_encounter_query=("DELETE FROM `catchable` WHERE userid=%s")
+                delete_encounter_args=(uid,)
+                insert_encounter_query=("INSERT INTO `catchable` (userid,pokemonNo,gender,shiny,level) VALUES "
+                "(%s,%s,%s,%s,%s)")
+                insert_encounter_args=(uid,pkmn_id,pkmn_gender,pkmn_shiny,pkmn_level)
 
-            update_encounter_query=("Update `Trainer` SET lastCatch=%s WHERE userid=%s")
-            update_encounter_args=(datetime.datetime.now(),uid,)
-            
-            cursor = stay["conn"].cursor(buffered=True)
-            cursor.execute(delete_encounter_query,delete_encounter_args)
-            cursor.execute(insert_encounter_query,insert_encounter_args)
-            cursor.execute(update_encounter_query,update_encounter_args)
-            cursor.close()
-            stay['conn'].commit()
-            time_left=last_encounter_delta
-        else:
-            # Check `catchable` table to see if user can catch an old pokemon
-            pkmn_id,pkmn_name=get_catchable(uid)
-            if pkmn_id==None:
+                update_encounter_query=("Update `Trainer` SET lastCatch=%s WHERE userid=%s")
+                update_encounter_args=(datetime.datetime.now(),uid,)
+                
+                cursor = stay["conn"].cursor(buffered=True)
+                cursor.execute(delete_encounter_query,delete_encounter_args)
+                cursor.execute(insert_encounter_query,insert_encounter_args)
+                cursor.execute(update_encounter_query,update_encounter_args)
+                cursor.close()
+                stay['conn'].commit()
+                time_left=last_encounter_delta
+            # Check `catchable` table to see if user can catch a pokemon
+            pkmn_info=get_catchable(uid)
+            if pkmn_info==None:
                 return render_template("/catch.html", msg=msg, wait_time=format_catch_time(time_left))
 
-        # Now find new rand pokemon
-        # Need to update catch time)
-        return render_template("/catch.html", msg=msg, mon_name=pkmn_name.title(),wait_time=format_catch_time(time_left))
+            
+            return render_template("/catch.html", msg=msg, wait_time=format_catch_time(time_left),
+                mon_name=pkmn_info['speciesName'].title(),
+                mon_lvl=pkmn_info['level'],
+                mon_gender=pkmn_info['gender'],
+                mon_shiny=pkmn_info['shiny']
+            )
+        except Exception as err:
+            print('catch: ', err)
+            return redirect(url_for('myMon',msg="Couldn't find a Pokemon"), code=status.SEE_OTHER)
     # Handle POST (caught pokemon)
     else:
-        shiny_rate=1/8192
-        pkmn_id,pkmn_name=get_catchable(uid)
-        #Will need to handle this better later
-        if pkmn_id is None:
-            #Couldn't find catchable pokemon in the table
-            return redirect(url_for('myMon',msg="The wild pokemon fled!"), code=status.FOUND)
-        
-        delete_encounter_query=("DELETE FROM `catchable` WHERE userid=%s")
-        delete_encounter_args=(uid,)
-        cursor = stay["conn"].cursor(buffered=True)
-        should_catch=request.form.get('catch', False)
-        if should_catch:
-            pkmn_gender=str(get_gender_chance(pkmn_id))
-            pkmn_shiny=str(get_shiny_chance())
-            pkmn_level=str(1)
-            insert_catch_query=("INSERT INTO `owns` "
-            "(pokemonNo, userid, level, gender, shiny, met, originalTrainerId) VALUES "
-            "(%s,%s,%s,%s,%s,%s,%s)")
-            insert_catch_args=(pkmn_id,uid,pkmn_level, pkmn_gender, pkmn_shiny,datetime.datetime.now(),uid, )
-            cursor.execute(insert_catch_query,insert_catch_args)
-            catch_message="You caught a {}!".format(pkmn_name.title())
-        else:
-            catch_message="Got away safely!"
-        cursor.execute(delete_encounter_query,delete_encounter_args)
-        cursor.close()
-        stay['conn'].commit()
-        return redirect(url_for('myMon',msg=catch_message), code=status.FOUND)
+        try:
+            pkmn_info=get_catchable(uid)
+            time_left=last_catch_expire(uid,last_encounter_delta)
+            #Will need to handle this better later
+            if pkmn_info is None or time_left < datetime.timedelta(0):
+                #Couldn't find catchable pokemon in the table
+                return redirect(url_for('myMon',msg="The wild pokemon fled!"), code=status.FOUND)
+            
+            delete_encounter_query=("DELETE FROM `catchable` WHERE userid=%s")
+            delete_encounter_args=(uid,)
+            cursor = stay["conn"].cursor(buffered=True)
+            should_catch=request.form.get('catch', False)
+            if should_catch:
+                insert_catch_query=("INSERT INTO `owns` "
+                "(pokemonNo, userid, level, gender, shiny, met, originalTrainerId) VALUES "
+                "(%s,%s,%s,%s,%s,CURRENT_TIMESTAMP(),%s)")
+                insert_catch_args=(pkmn_info['pokemonNo'],uid,pkmn_info['level'], pkmn_info['gender'], pkmn_info['shiny'],uid, )
+                cursor.execute(insert_catch_query,insert_catch_args)
+                catch_message="You caught a {}!".format(pkmn_info['speciesName'].title())
+            else:
+                catch_message="Got away safely!"
+            cursor.execute(delete_encounter_query,delete_encounter_args)
+            cursor.close()
+            stay['conn'].commit()
+            return redirect(url_for('myMon',msg=catch_message), code=status.FOUND)
+        except Exception as err:
+            print('catch: ', err)
+            return redirect(url_for('catch',msg="The Pokemon broke free!",method="GET"), code=status.SEE_OTHER)
 
 @app.route("/")
 def root():
     token = authenticate(request.cookies.get('access_token'))
     if token is not None:
-        to = url_for('catch_pokemon')
+        to = url_for('catch')
         try:
             ref = request.cookies.get('referrer')
             if len(ref) != 0:
