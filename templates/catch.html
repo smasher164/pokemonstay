@@ -19,6 +19,11 @@
         {% if mon_name %}
         <p>
             You encountered {{mon_name}}!
+            <div>
+                <p>Level: {{mon_lvl}}</p>
+                <p>Gender: {{ mon_gender }}</p>
+                <p>Shiny: {{ mon_shiny}}</p>
+            </div>
         </p>
         <form method="post">
             <button>Catch</button>
