@@ -9,7 +9,16 @@
     {% include 'nav.html' %}
     <h1>Pokedex Entry</h1>
         {% for item in info %}
-        {% if item.pokemonNo < 100 %}
+        {% if item.pokemonNo < 10 %}
+        <figure>       
+                <img src="https://www.serebii.net/sunmoon/pokemon/00{{item.pokemonNo}}.png" width=200 height=200>
+                <figcaption>Regular</figcaption>
+            </figure>
+            <figure>
+                <img src="https://www.serebii.net/Shiny/SM/00{{item.pokemonNo}}.png" width=200 height=200>
+                <figcaption>Shiny</figcaption>
+            </figure>
+        {% elif item.pokemonNo < 100 %}
         <figure>       
             <img src="https://www.serebii.net/sunmoon/pokemon/0{{item.pokemonNo}}.png" width=200 height=200>
             <figcaption>Regular</figcaption>
@@ -40,6 +49,38 @@
             <p>Height: {{item.height}} m</p>
             <p>Weight: {{item.weight}} kg</p>
             {% endif %}
-        {% endfor %}
+            <p>Location(s) in the wild:<br>
+                {% if item.locLen == 0 %}
+                - None
+                {% else %}
+                {% for loc in item.loc %}
+                - {{ loc[0] }} in the {{ loc[1] }} region<br>
+                {% endfor %}
+                {% endif %}
+            </p>
+
+            {% if item.fromLen != 0 %}
+            <p>Evolves From:<br>
+                {% for from in item.from %}
+                    - <a href="/dex/{{ from[0] }}">{{ from[1] }}</a> <br>
+                    {% endfor %}
+            </p>
+            {% endif %}
+
+            {% if item.toLen != 0 %}
+            <p>Evolves To:<br>
+                {% for to in item.to %}
+                    - <a href="/dex/{{ to[0] }}">{{ to[1] }}</a> <br>
+                    {% endfor %}
+            </p>
+            {% endif %}
+
+            <p>Egg Group(s):<br>
+                    {% for group in item.egg %}
+                    - {{ group }} <br>
+                    {% endfor %}
+                    </p>
+            {% endfor %}
+        
 </body>
 </html>

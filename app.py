@@ -203,7 +203,6 @@ def dex_view(id):
     if token is None:
         return redirback(url_for('root'))
     cursor = stay["conn"].cursor(prepared=True)
-    # at most one match
     query = ("SELECT speciesName, pokemonNo, height, weight, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types Where pokemonNo=%s ORDER By pokemonNo")
     tup = (id,)
     cursor.execute(query, tup)
@@ -223,14 +222,85 @@ def dex_view(id):
         item['speciesName'] = str(info[i]['speciesName'],'utf-8')
         item['typeName'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i]['typeName'],'utf-8')+".gif"
         item['typeName2'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i+1]['typeName'],'utf-8')+".gif"
-        result.append(item)
+
     else:
         item['pokemonNo'] = info[i]['pokemonNo']
         item['height'] = info[i]['height'] / 10
         item['weight'] = info[i]['weight'] / 10
         item['speciesName'] = str(info[i]['speciesName'],'utf-8')
         item['typeName'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i]['typeName'],'utf-8')+".gif"
-        result.append(item) 
+    
+    # egg groups here
+    info = []
+    eggs = []
+    query = ("SELECT eggName FROM pokemon NATURAL JOIN inEggGroup NATURAL JOIN EggGroup WHERE pokemonNo=%s")
+    cursor.execute(query, tup)
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    for x in info:
+        eggs.append(str(x['eggName'],'utf-8'))
+    item['egg'] = eggs
+
+    # locations (with region) here
+    query = ("SELECT locationName, regionName FROM pokemon NATURAL JOIN isFound NATURAL JOIN Location NATURAL JOIN Region WHERE pokemonNo=%s")
+    info = []
+    loc = []
+    cursor.execute(query, tup)
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    for x in info:
+        loc.append((str(x['locationName'],'utf-8'),str(x['regionName'],'utf-8')))
+    item['loc'] = loc
+    item['locLen'] = len(loc)
+
+    #evolves from
+    query = ("SELECT from_pokemonNo FROM pokemon NATURAL JOIN evolves where pokemon.pokemonNo = evolves.to_pokemonNo and pokemonNo=%s")
+    info = []
+    evolvesFrom = []
+    cursor.execute(query, tup)
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    for x in info:
+        c2 = stay["conn"].cursor(prepared=True)
+        extra = []
+        query = ("SELECT speciesName FROM pokemon where pokemonNo = %s")
+        c2.execute(query,(x['from_pokemonNo'],))
+        col2 = tuple( [d[0] for d in c2.description] )
+        for row in c2:
+            extra.append(dict(zip(col2, row)))
+        evolvesFrom.append((x['from_pokemonNo'],str(extra[0]['speciesName'],'utf-8')))
+        c2.close()
+
+    item['from'] = evolvesFrom
+    item['fromLen'] = len(evolvesFrom)
+    
+
+    #evolves to
+    query = ("SELECT to_pokemonNo FROM pokemon NATURAL JOIN evolves where pokemon.pokemonNo = evolves.from_pokemonNo and pokemonNo=%s")
+    info = []
+    evolvesTo = []
+    cursor.execute(query, tup)
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    for x in info:
+        c2 = stay["conn"].cursor(prepared=True)
+        extra = []
+        query = ("SELECT speciesName FROM pokemon where pokemonNo = %s")
+        c2.execute(query,(x['to_pokemonNo'],))
+        col2 = tuple( [d[0] for d in c2.description] )
+        for row in c2:
+            extra.append(dict(zip(col2, row)))
+        evolvesTo.append((x['to_pokemonNo'],str(extra[0]['speciesName'],'utf-8')))
+        c2.close()
+
+
+    item['to'] = evolvesTo
+    item['toLen'] = len(evolvesTo)
+    result.append(item) 
     cursor.close()
     return render_template("/dex.html", info=result)
 
