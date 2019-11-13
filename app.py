@@ -75,7 +75,7 @@ def myMon():
     for row in cursor:
         info.append(dict(zip(columns, row)))
     for item in info:
-        item['speciesName'] = str(item['speciesName'],'utf-8')
+        item['speciesName'] = str(item['speciesName'],'utf-8').capitalize()
         if item['nickname'] is not None:
             item['nickname'] = str(item['nickname'],'utf-8')
     size = len(info)
@@ -101,14 +101,14 @@ def release(id):
     for row in cursor:
         info.append(dict(zip(columns, row)))
     for item in info:
-        item['speciesName'] = str(item['speciesName'],'utf-8')
+        item['speciesName'] = str(item['speciesName'],'utf-8').capitalize()
         if item['nickname'] is not None:
             item['nickname'] = str(item['nickname'],'utf-8')
     size = len(info)
     if size==0:
         msg = "Either that mon does not exist or you do not have privileges to release it"
     if size !=0:
-        msg = "You just released mon " + info[0]['speciesName'] + " with mon id "+ str(id)
+        msg = "You just released mon " + info[0]['speciesName'].capitalize() + " with mon id "+ str(id)
         query = ("DELETE FROM `owns` "
                 "WHERE ownsId = %s")
         cursor.execute(query, (id,))
@@ -145,7 +145,7 @@ def rename_submit(id):
         for row in cursor:
             info.append(dict(zip(columns, row)))
         for item in info:
-            item['speciesName'] = str(item['speciesName'],'utf-8')
+            item['speciesName'] = str(item['speciesName'],'utf-8').capitalize()
             if item['nickname'] is not None:
                 item['nickname'] = str(item['nickname'],'utf-8')
         size = len(info)
@@ -171,7 +171,7 @@ def dexMain_view():
     if token is None:
         return redirback(url_for('root'))
     cursor = stay["conn"].cursor(prepared=True)
-    query = ("SELECT pokemonNo, speciesName, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types ORDER By pokemonNo")
+    query = ("SELECT pokemonNo, speciesName, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types ORDER By pokemonNo,typeName")
     cursor.execute(query)
     info = []
     result = []
@@ -183,14 +183,14 @@ def dexMain_view():
         item = {}
         if i != len(info) -1 and info[i]['pokemonNo'] == info[i+1]['pokemonNo']:
             item['pokemonNo'] = info[i]['pokemonNo']
-            item['speciesName'] = str(info[i]['speciesName'],'utf-8')
+            item['speciesName'] = str(info[i]['speciesName'],'utf-8').capitalize()
             item['typeName'] = str(info[i]['typeName'],'utf-8')
             item['typeName2'] = str(info[i+1]['typeName'],'utf-8')
             result.append(item)
             i +=2
         else:
             item['pokemonNo'] = info[i]['pokemonNo']
-            item['speciesName'] = str(info[i]['speciesName'],'utf-8')
+            item['speciesName'] = str(info[i]['speciesName'],'utf-8').capitalize()
             item['typeName'] = str(info[i]['typeName'],'utf-8')
             result.append(item)
             i+=1 
@@ -219,7 +219,7 @@ def dex_view(id):
         item['height'] = info[i]['height'] / 10
         item['weight'] = info[i]['weight'] / 10
         #https://www.serebii.net/pokedex-bw/type/fighting.gif
-        item['speciesName'] = str(info[i]['speciesName'],'utf-8')
+        item['speciesName'] = str(info[i]['speciesName'],'utf-8').capitalize()
         item['typeName'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i]['typeName'],'utf-8')+".gif"
         item['typeName2'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i+1]['typeName'],'utf-8')+".gif"
 
@@ -227,7 +227,7 @@ def dex_view(id):
         item['pokemonNo'] = info[i]['pokemonNo']
         item['height'] = info[i]['height'] / 10
         item['weight'] = info[i]['weight'] / 10
-        item['speciesName'] = str(info[i]['speciesName'],'utf-8')
+        item['speciesName'] = str(info[i]['speciesName'],'utf-8').capitalize()
         item['typeName'] = "https://www.serebii.net/pokedex-bw/type/"+str(info[i]['typeName'],'utf-8')+".gif"
     
     # egg groups here
@@ -271,7 +271,7 @@ def dex_view(id):
         col2 = tuple( [d[0] for d in c2.description] )
         for row in c2:
             extra.append(dict(zip(col2, row)))
-        evolvesFrom.append((x['from_pokemonNo'],str(extra[0]['speciesName'],'utf-8')))
+        evolvesFrom.append((x['from_pokemonNo'],str(extra[0]['speciesName'],'utf-8').capitalize()))
         c2.close()
 
     item['from'] = evolvesFrom
@@ -294,7 +294,7 @@ def dex_view(id):
         col2 = tuple( [d[0] for d in c2.description] )
         for row in c2:
             extra.append(dict(zip(col2, row)))
-        evolvesTo.append((x['to_pokemonNo'],str(extra[0]['speciesName'],'utf-8')))
+        evolvesTo.append((x['to_pokemonNo'],str(extra[0]['speciesName'],'utf-8').capitalize()))
         c2.close()
 
 

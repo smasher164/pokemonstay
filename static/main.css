@@ -35,6 +35,8 @@ auth-form .message {
 }
 
 header {
+    margin-bottom: 1em;
+    margin-top: 1em;
     text-align: center;
 }
 
@@ -44,4 +46,15 @@ header img {
 
 .invalid-input {
     border: solid 2px red;
+}
+
+figure{
+    display: inline-block;
+}
+
+nav{
+    display: inline;
+    width: 100%;
+    float: right;
+    background-color: #007bff;
 }

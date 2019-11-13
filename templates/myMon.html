@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <title>My Mon</title>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 <link href="/static/main.css" rel="stylesheet">
 </head>
 <body>
@@ -15,7 +17,8 @@
     <p>Sorry, you don't have any mon</p>
     {% endif %}
     {% if size != 0 %}
-    <table>
+    <center>
+    <table class="table" style="width:70%;">
         <tr>
           <th>Mon</th>
           <th>Nickname</th>
@@ -28,7 +31,13 @@
         </tr>
         {% for item in info %}
         <tr>
-            <td><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            {% if item.pokemonNo < 10 %}
+            <td><img src="http://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png"/>&nbsp<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            {% elif item.pokemonNo < 100 %}
+            <td><img src="http://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"/>&nbsp<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            {% else %}
+            <td><img src="http://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"/>&nbsp<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            {% endif %}
             <td>{% if item.nickname %}
                 {{ item.nickname }}
             {% endif %}</td>
@@ -53,7 +62,10 @@
             <td><a href="/rename/{{ item.ownsId }}">Rename Mon</a></td>
             <td><a href="/release/{{ item.ownsId }}">Release Mon</a></td>
         </tr>
+   
         {% endfor %}
+    </table>
+</center>
     {% endif %}
 
 </body>
