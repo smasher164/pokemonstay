@@ -897,60 +897,60 @@ def root():
         return clearref(redirect(to, code=status.FOUND))
     return render_template("auth.html")
 
-@app.route("/train/submit/<id>", methods=['GET', 'POST'])
+@app.route("/train/submit/<id>", methods=['POST'])
 def trained(id):
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
-        return redirback(url_for('root'))
+        return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
     uid = token['userid']
-    if request.method == 'POST':
-        msg=""
-        clicks = int(request.form['clicks'])
-        cursor = Cursor(prepared=True)
-        query = ("SELECT pokemonNo, speciesName, level, gender, nickname, shiny, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId = %s")
-        tup = (id,uid)
-        #Query returns either a single row or nothing if ownsId is invalid
-        cursor.execute(query, tup)
-        info = []
-        result = []
-        columns = tuple( [d[0] for d in cursor.description] )
-        for row in cursor:
-            info.append(dict(zip(columns, row)))
-        size = len(info)
-        if (size == 0):
-            msg = "Train... that mon does not exist or it does not belong to you!"
-            return redirect(url_for('myMon',msg=msg), code=status.FOUND)
-        item = {}
-        item['pokemonNo'] = info[0]['pokemonNo']
-        item['shiny'] = info[0]['shiny']
-        item['speciesName'] = str(info[0]['speciesName'], 'utf-8').capitalize()
-        item['exp'] = info[0]['exp'] + (clicks * 5)
-        lvlinc = getlevel(info[0]['level'],item['exp'])
-        item['level'] = info[0]['level'] + lvlinc
-        if item['level'] >= 100:
-            item['level'] = 100
-        item['gender'] = info[0]['gender']
+    msg=""
+    clickreq = request.get_json()
+    clicks = clickreq['clicks']
+
+    cursor = Cursor(prepared=True)
+    query = ("SELECT pokemonNo, speciesName, level, gender, nickname, shiny, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId = %s")
+    tup = (id,uid)
+    #Query returns either a single row or nothing if ownsId is invalid
+    cursor.execute(query, tup)
+    info = []
+    result = []
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    size = len(info)
+    if (size == 0):
+        msg = "Train... that mon does not exist or it does not belong to you!"
+        return make_response(jsonify({'err': msg}), status.BAD_REQUEST)
+    item = {}
+    item['pokemonNo'] = info[0]['pokemonNo']
+    item['shiny'] = info[0]['shiny']
+    item['speciesName'] = str(info[0]['speciesName'], 'utf-8').capitalize()
+    item['exp'] = info[0]['exp'] + (clicks * 5)
+    lvlinc = getlevel(info[0]['level'],item['exp'])
+    item['level'] = info[0]['level'] + lvlinc
+    if item['level'] >= 100:
+        item['level'] = 100
+    item['gender'] = info[0]['gender']
+    if info[0]['nickname'] is not None:
+        item['nickname'] = str(info[0]['nickname'], 'utf-8')
+    item['id'] = id
+    expNeeded = pow(item['level'] + 1, 3) - item['exp']
+    item['expNeeded'] = expNeeded
+    result.append(item)
+    query = ("UPDATE `owns` SET `exp`=%s, `level`=%s WHERE `ownsId`=%s")
+    #cursor.execute(query, (item['exp'],id))
+    #query = ("UPDATE `owns` SET `level`=%s WHERE `ownsId`=%s")
+    cursor.execute(query, (item['exp'],item['level'],id))
+    if lvlinc > 0:
         if info[0]['nickname'] is not None:
-            item['nickname'] = str(info[0]['nickname'], 'utf-8')
-        item['id'] = id
-        expNeeded = pow(info[0]['level'] + 1, 3) - info[0]['exp']
-        item['expNeeded'] = expNeeded
-        result.append(item)
-        query = ("UPDATE `owns` SET `exp`=%s, `level`=%s WHERE `ownsId`=%s")
-        #cursor.execute(query, (item['exp'],id))
-        #query = ("UPDATE `owns` SET `level`=%s WHERE `ownsId`=%s")
-        cursor.execute(query, (item['exp'],item['level'],id))
-        if lvlinc > 0:
-            if info[0]['nickname'] is not None:
-                msg = item['nickname'] + " has leveled up to level " + str(item['level'])
-            else:
-                msg = item['speciesName'] + " has leveled up to level " + str(item['level'])
-        cursor.close()
-        #return render_template("/train.html", info=result, msg=msg)
-        return redirect(url_for('train',id=id, info=result, msg=msg), code=status.FOUND)
+            msg = item['nickname'] + " has leveled up to level " + str(item['level'])
+        else:
+            msg = item['speciesName'] + " has leveled up to level " + str(item['level'])
+    cursor.close()
+    #return render_template("/train.html", info=result, msg=msg)
+    return make_response(jsonify(info=result,msg=msg), status.OK)
 
 
-    return redirect(url_for('myMon',msg="bad url"), code=status.FOUND)
 
 @app.route("/train/<id>", methods=['GET', 'POST'])
 def train(id):

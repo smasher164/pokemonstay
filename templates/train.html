@@ -13,10 +13,10 @@
         {% include 'header.html' %}
         {% include 'nav.html' %}
         <h1>Train your Pokémon</h1>
-        {% if msg %}
-        <p><font color="red">{{ msg }}</font></p>
-        {% endif %}
         <center>
+        
+        <p id="message" style="color: red;">{% if msg %}{{ msg }}{% endif %}</p>
+        
         {% if info %}
         {% if info[0].pokemonNo < 10 %}
         {% if info[0].shiny == 0 %}
@@ -37,7 +37,7 @@
                 <img src="https://www.serebii.net/Shiny/SM/{{info[0].pokemonNo}}.png" width=200 height=200>
             {% endif %}
         {% endif %}
-        <p>
+        <p id="training-text">
             {% if info[0].nickname %}
             You're training {{ info[0].nickname }} the {{ info[0].speciesName }}.
             {% else %}
@@ -60,21 +60,71 @@
         
         <div class="btn-inline">
         <button class="btn btn-primary" id="train-Train">Train</button> &nbsp; &nbsp;
-        <form action="/train/submit/{{ info[0].id }}" method="POST">
+    
         <input id="clicks" name="clicks" type="hidden" value="0"/>
         <button class="btn btn-primary"id="train-Submit">Submit</button>
-        </form>
+        
         </div>
         </center>
-
     </body>
 
     <script type="text/javascript">
-        var counter = 0
+        let trainpara = document.querySelector("#training-text")
+        let message = document.querySelector("#message")
+        let counter = 0
         document.querySelector("#train-Train").addEventListener('click', e => {
             counter = counter + 1
             document.getElementById("clicknumber").textContent = "You have clicked " + counter + " times"
             document.getElementById("clicks").value = counter
         }) 
+        document.querySelector("#train-Submit").addEventListener('click', e => submit(e) ) 
+        setInterval(submit, 120000)
+
+        function submit(e){
+            if(counter == 0){
+                return        
+            }
+            let req = new XMLHttpRequest()
+            req.responseType = 'json'
+            req.addEventListener('load', ev => {
+            console.log(ev.target.response)
+            console.log(ev.target.status)
+            if (ev.target.status == 200){
+                trainpara.textContent = stringHelper(ev.target.response.info[0])
+                message.textContent = ev.target.response.msg
+            }
+            })
+            let url = new URL(document.URL)
+            req.open('POST', '/train/submit/{{info[0].id}}')
+            req.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
+            req.send(JSON.stringify({clicks: counter}))
+            counter = 0
+            document.getElementById("clicknumber").textContent = "You have clicked " + counter + " times"
+            document.getElementById("clicks").value = counter
+        }
+
+
+        function stringHelper(data){
+            let s = ""
+            if (data.nickname){
+                s += `You're training ${data.nickname} the ${data.speciesName}. `
+            }
+            else{
+                s += `You're training your ${data.speciesName}. ` 
+            }
+            switch (data.gender) {
+                case 0: s += "They are"; break;
+                case 1: s += "She is"; break;
+                case 2: s += "He is"; break;
+            }
+            if(data.level ==100){
+                s += ` currently level ${data.level}.` 
+            }
+            else{
+                s += ` currently level ${data.level} and needs ${data.expNeeded} experience points to level up.`
+            }
+            return s
+        }
     </script>
 </html>
+

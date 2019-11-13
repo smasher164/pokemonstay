@@ -10,6 +10,7 @@
     {% include 'header.html' %}
     {% include 'nav.html' %}
     <h1>My Mon</h1>
+    <center>
     {% if msg %}
     <p><font color="red">{{ msg }}</font></p>
     {% endif %}
@@ -17,7 +18,6 @@
     <p>Sorry, you don't have any mon</p>
     {% endif %}
     {% if size != 0 %}
-    <center>
     <table class="table" style="width:70%;">
         <tr>
           <th>Mon</th>

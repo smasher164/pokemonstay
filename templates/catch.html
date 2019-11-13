@@ -11,10 +11,10 @@
     <body>
         {% include 'header.html' %}
         {% include 'nav.html' %}
+        <center>
         {% if msg %}
         <p><font color="red">{{ msg }}</font></p>
         {% endif %}
-        <center>
         <p>
             Time until next catch: {{wait_time}}
         </p>
