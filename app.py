@@ -460,7 +460,6 @@ def catch():
         return numpy.rint(numpy.random.ranf()*3)
     if request.method=="GET":
         try:
-            raise Exception("Get smacked")
             msg = request.args.get('msg', None)
             # First check if available to catch new pokemon
             time_left=last_catch_expire(uid,last_encounter_delta)
