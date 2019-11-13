@@ -1,18 +1,13 @@
 <nav>
-    <ul>
-        <li>
-            <button id="nav-box" class="nav-link">Box</button>
-        </li>
-        <li>
-            <button id="nav-dex" class="nav-link">Pokédex</button>
-        </li>
-        <li>
-            <button id="nav-logout" class="nav-link">Logout</button>
-        </li>
-    </ul>
+        <button id="nav-logout" class="nav-link float-right btn btn-primary">Logout</button>                
+        <button id="nav-dex" class="nav-link float-right btn btn-primary">Pokédex</button>
+        <button id="nav-catch" class="nav-link float-right btn btn-primary">Catch</button>
+        <button id="nav-box" class="nav-link float-right btn btn-primary">Box</button>
+    
     <script type="text/javascript">
         document.querySelector("#nav-box").addEventListener('click', e => window.location.replace('/myMon'))
         document.querySelector("#nav-dex").addEventListener('click', e => window.location.replace('/pokedex'))
+        document.querySelector("#nav-catch").addEventListener('click', e => window.location.replace('/catch'))
         document.querySelector("#nav-logout").addEventListener('click', e => {
             var req = new XMLHttpRequest()
             req.responseType = 'json'
