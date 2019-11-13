@@ -130,7 +130,7 @@ def release(id):
     if size==0:
         msg = "Either that mon does not exist or you do not have privileges to release it"
     if size !=0:
-        msg = "You just released mon " + info[0]['speciesName'].capitalize() + " with mon id "+ str(id)
+        msg = "You just released mon " + info[0]['speciesName'].capitalize()
         query = ("DELETE FROM `owns` "
                 "WHERE ownsId = %s")
         cursor.execute(query, (id,))
@@ -173,9 +173,9 @@ def rename_submit(id):
         if size==0:
             msg = "Either that mon does not exist or you do not have privileges to rename it"
         if size !=0:
-            msg = "You just renamed mon " + info[0]['speciesName'] + " with mon id " + str(info[0]['ownsId']) + " to "+ nickname
+            msg = "You just renamed mon " + info[0]['speciesName'] + " to "+ nickname
             if nickname == "":
-                msg = "You just got rid of the nickname for mon " + info[0]['speciesName'] + " with mon id " + str(info[0]['ownsId'])
+                msg = "You just got rid of the nickname for mon " + info[0]['speciesName']
             query = ("UPDATE `owns` SET `nickname`=%s WHERE `ownsId`=%s")
             cursor.execute(query, (nickname,id))
 
