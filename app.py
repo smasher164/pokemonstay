@@ -143,7 +143,7 @@ def rename(id):
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
         return redirback(url_for('root'))
-    cursor = Cursor()
+    cursor = Cursor(prepared=True)
     tup = (id,)
     query = ("SELECT pokemonNo, speciesName, nickname, shiny FROM `owns` natural join `pokemon` "
                 "Where ownsId = %s")
