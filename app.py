@@ -441,8 +441,8 @@ def last_catch_expire(uid,expiration_duration):
     cursor.close()
     last_encounter_time=last_encounter_dict.get('lastCatch')
     if last_encounter_time is None:
-        last_encounter_time=datetime.datetime.now()-expiration_duration
-    time_left=last_encounter_time+expiration_duration-datetime.datetime.now()
+        last_encounter_time=datetime.datetime.utcnow()-expiration_duration
+    time_left=last_encounter_time+expiration_duration-datetime.datetime.utcnow()
     return time_left
 
 
@@ -457,7 +457,7 @@ def catch():
     def get_shiny_chance():
         return int(numpy.random.ranf()<shiny_rate)
     def get_gender_chance(pokeNo):
-        return numpy.rint(numpy.random.ranf()*3)
+        return numpy.random.randint(3)
     if request.method=="GET":
         try:
             msg = request.args.get('msg', None)
@@ -480,7 +480,7 @@ def catch():
                 insert_encounter_args=(uid,pkmn_id,pkmn_gender,pkmn_shiny,pkmn_level)
 
                 update_encounter_query=("Update `Trainer` SET lastCatch=%s WHERE userid=%s")
-                update_encounter_args=(datetime.datetime.now(),uid,)
+                update_encounter_args=(datetime.datetime.utcnow(),uid,)
                 
                 cursor = stay["conn"].cursor(buffered=True)
                 cursor.execute(delete_encounter_query,delete_encounter_args)
