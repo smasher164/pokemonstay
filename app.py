@@ -875,6 +875,45 @@ def tradeDaemon(token, rscID):
                 cursor.execute("INSERT INTO `trades` (user1Id, user2Id, pokemon1, pokemon2) VALUES (%s, %s, %s, %s)", (data["user1Id"], data["user2Id"], data["pokemon1"], data["pokemon2"]))
                 # 2. Remove row in temp_trades
                 cursor.execute("DELETE FROM `temp_trades` WHERE resourceId = %s", (rscID,))
+                # 3. Evolve pokemon1 if needed
+                cursor.execute("SELECT owns.gender as Ogender, evolves.gender as Egender,to_pokemonNo FROM owns JOIN evolves WHERE owns.pokemonNo = evolves.from_pokemonNo AND triggerId=2 AND ownsId=%s",(data["pokemon1"],))
+                # 3.5 check triggers and gender
+                columns = tuple( [d[0] for d in cursor.description])
+                # will just have one entry here (unless eevee or clamperl)
+                if cursor.rowcount!=0:
+                    # clamperl and eevee
+                    if cursor.rowcount > 1:
+                        # 2 possible clamperl evolutions and 8 for eevee
+                        evolution = numpy.random.randint(cursor.rowcount) + 1
+                        info = []
+                        for i in range (0,evolution):
+                            info = (dict(zip(columns, cursor.fetchone())))
+                        cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(info['to_pokemonNo'],data["pokemon1"]))
+                    else:
+                        info = (dict(zip(columns, cursor.fetchone())))
+                        if info['Egender'] is None or info['Egender'] == info['Ogender']:
+                            # evolve!
+                            cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(info['to_pokemonNo'],data["pokemon1"]))
+                # 4. Evolve pokemon1 if needed
+                cursor.execute("SELECT owns.gender as Ogender, evolves.gender as Egender,to_pokemonNo FROM owns JOIN evolves WHERE owns.pokemonNo = evolves.from_pokemonNo AND triggerId=2 AND ownsId=%s",(data["pokemon2"],))
+                # 4.5 check triggers and gender
+                columns = tuple( [d[0] for d in cursor.description])
+                # will just have one entry here (unless eevee or clamperl)
+                if cursor.rowcount!=0:
+                    # clamperl and eevee
+                    if cursor.rowcount > 1:
+                        # 2 possible clamperl evolutions and 8 for eevee
+                        evolution = numpy.random.randint(cursor.rowcount) + 1
+                        info = []
+                        for i in range (0,evolution):
+                            info = (dict(zip(columns, cursor.fetchone())))
+                        cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(info['to_pokemonNo'],data["pokemon2"]))
+                    else:
+                        info = (dict(zip(columns, cursor.fetchone())))
+                        if info['Egender'] is None or info['Egender'] == info['Ogender']:
+                            # evolve!
+                            cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(info['to_pokemonNo'],data["pokemon2"]))
+
                 res = make_response('', status.OK)
 
             cursor.close()
