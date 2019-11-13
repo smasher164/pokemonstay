@@ -946,7 +946,7 @@ def trained(id):
     clickreq = request.get_json()
     clicks = clickreq['clicks']
 
-    cursor = Cursor(prepared=True)
+    cursor = Cursor(buffered=True)
     query = ("SELECT pokemonNo, speciesName, level, gender, nickname, shiny, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId = %s")
     tup = (id,uid)
     #Query returns either a single row or nothing if ownsId is invalid
@@ -963,7 +963,7 @@ def trained(id):
     item = {}
     item['pokemonNo'] = info[0]['pokemonNo']
     item['shiny'] = info[0]['shiny']
-    item['speciesName'] = str(info[0]['speciesName'], 'utf-8').capitalize()
+    item['speciesName'] = info[0]['speciesName'].capitalize()
     item['exp'] = info[0]['exp'] + (clicks * 5)
     lvlinc = getlevel(info[0]['level'],item['exp'])
     item['level'] = info[0]['level'] + lvlinc
@@ -971,7 +971,7 @@ def trained(id):
         item['level'] = 100
     item['gender'] = info[0]['gender']
     if info[0]['nickname'] is not None:
-        item['nickname'] = str(info[0]['nickname'], 'utf-8')
+        item['nickname'] = info[0]['nickname']
     item['id'] = id
     expNeeded = pow(item['level'] + 1, 3) - item['exp']
     item['expNeeded'] = expNeeded
@@ -980,11 +980,47 @@ def trained(id):
     #cursor.execute(query, (item['exp'],id))
     #query = ("UPDATE `owns` SET `level`=%s WHERE `ownsId`=%s")
     cursor.execute(query, (item['exp'],item['level'],id))
-    if lvlinc > 0:
-        if info[0]['nickname'] is not None:
-            msg = item['nickname'] + " has leveled up to level " + str(item['level'])
+    # evolve if needed!
+    cursor.execute("SELECT owns.level as Olevel, evolves.level as Elevel, owns.gender as Ogender, evolves.gender as Egender,to_pokemonNo FROM owns JOIN evolves WHERE owns.pokemonNo = evolves.from_pokemonNo AND triggerId=1 AND ownsId=%s",(id,))
+    columns = tuple( [d[0] for d in cursor.description])
+    evolved = False
+    if cursor.rowcount!=0:
+        if cursor.rowcount > 1:
+            # burmy where gender matters
+            if item['pokemonNo'] == 412:
+                ev = []
+                for row in cursor:
+                    ev = (dict(zip(columns, row)))
+                    if ((ev['Egender'] is None or ev['Egender'] == ev['Ogender']) and ev['Olevel'] >= ev['Elevel']):
+                        # evolve!
+                        cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(ev['to_pokemonNo'],id))
+                        evolved = True
+            else:
+                evolution = numpy.random.randint(cursor.rowcount) + 1
+                ev = []
+                for i in range (0,evolution):
+                    ev = (dict(zip(columns, cursor.fetchone())))
+                if ((ev['Egender'] is None or ev['Egender'] == ev['Ogender']) and ev['Olevel'] >= ev['Elevel']):
+                    # evolve!
+                    cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(ev['to_pokemonNo'],id))
+                    evolved = True
         else:
-            msg = item['speciesName'] + " has leveled up to level " + str(item['level'])
+            ev = (dict(zip(columns, cursor.fetchone())))
+            if ((ev['Egender'] is None or ev['Egender'] == ev['Ogender']) and ev['Olevel'] >= ev['Elevel']):
+                # evolve!
+                cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(ev['to_pokemonNo'],id))
+                evolved = True
+    if not evolved:        
+        if lvlinc > 0:
+            if info[0]['nickname'] is not None:
+                msg = item['nickname'] + " has leveled up to level " + str(item['level'])
+            else:
+                msg = item['speciesName'] + " has leveled up to level " + str(item['level'])
+    else:
+        if info[0]['nickname'] is not None:
+            msg = item['nickname'] + " has evolved!"
+        else:
+            msg = item['speciesName'] + " has evolved!"
     cursor.close()
     #return render_template("/train.html", info=result, msg=msg)
     return make_response(jsonify(info=result,msg=msg), status.OK)
