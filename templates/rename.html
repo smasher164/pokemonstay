@@ -8,10 +8,35 @@
 <body>
     {% include 'header.html' %}
     {% include 'nav.html' %}
-    <h1>Rename mon {{ id }}</h1>
+    {% if info.nickname %}
+    <h1>Rename Mon {{ info.nickname }}</h1>
+    {% else %}
+    <h1>Rename Mon {{ info.speciesName }}</h1>
+    {% endif %}
+    <center>
+        {% if info.pokemonNo < 10 %}
+        {% if info.shiny == 0 %}
+            <img src="https://www.serebii.net/sunmoon/pokemon/00{{info.pokemonNo}}.png" width=200 height=200>
+        {% else %}
+            <img src="https://www.serebii.net/Shiny/SM/00{{info.pokemonNo}}.png" width=200 height=200>
+        {% endif %}
+        {% elif info.pokemonNo < 100 %}
+        {% if info.shiny == 0 %}
+            <img src="https://www.serebii.net/sunmoon/pokemon/0{{info.pokemonNo}}.png" width=200 height=200>
+        {% else %}
+            <img src="https://www.serebii.net/Shiny/SM/0{{info.pokemonNo}}.png" width=200 height=200>
+        {% endif %}
+        {% else %}
+        {% if info.shiny == 0 %}     
+                <img src="https://www.serebii.net/sunmoon/pokemon/{{info.pokemonNo}}.png" width=200 height=200>
+        {% else %}
+                <img src="https://www.serebii.net/Shiny/SM/{{info.pokemonNo}}.png" width=200 height=200>
+        {% endif %}
+        {% endif %} 
     <form action="/rename/submit/{{ id }}" method="POST">
-        New Nickname: <input type="text" name="nickname" maxlength="20"><br>
-        <input type="submit" value="Submit">
+        New Nickname: <input type="text" name="nickname" maxlength="20"><br/> <br/>
+        <input class = "btn btn-primary" type="submit" value="Submit">
       </form>
+    </center>
 </body>
 </html>
