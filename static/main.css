@@ -58,3 +58,7 @@ nav{
     float: right;
     background-color: #007bff;
 }
+
+.btn-inline{
+    display: inline-flex;
+}

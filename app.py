@@ -143,7 +143,21 @@ def rename(id):
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
         return redirback(url_for('root'))
-    return render_template("/rename.html", id=id)
+    cursor = Cursor()
+    tup = (id,)
+    query = ("SELECT pokemonNo, speciesName, nickname, shiny FROM `owns` natural join `pokemon` "
+                "Where ownsId = %s")
+    cursor.execute(query, tup)
+    info = []
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    for item in info:
+        item['speciesName'] = str(item['speciesName'],'utf-8').capitalize()
+        if item['nickname'] is not None:
+            item['nickname'] = str(item['nickname'],'utf-8')
+
+    return render_template("/rename.html", id=id, info=info[0])
 
 @app.route("/rename/submit/<id>",methods=['GET','POST'])
 def rename_submit(id):
@@ -514,6 +528,7 @@ def get_catchable(uid):
         if cursor.rowcount==0:
             return None
         info = (dict(zip(columns, cursor.fetchone())))
+        info['speciesName'] = info['speciesName'].capitalize()
         cursor.close()
         return info
     except Exception as err:
@@ -596,7 +611,8 @@ def catch():
                 mon_name=pkmn_info['speciesName'].title(),
                 mon_lvl=pkmn_info['level'],
                 mon_gender=pkmn_info['gender'],
-                mon_shiny=pkmn_info['shiny']
+                mon_shiny=pkmn_info['shiny'],
+                mon_no=pkmn_info['pokemonNo']
             )
         except Exception as err:
             print('catch: ', err)
@@ -907,7 +923,7 @@ def trained(id):
         item = {}
         item['pokemonNo'] = info[0]['pokemonNo']
         item['shiny'] = info[0]['shiny']
-        item['speciesName'] = str(info[0]['speciesName'], 'utf-8')
+        item['speciesName'] = str(info[0]['speciesName'], 'utf-8').capitalize
         item['exp'] = info[0]['exp'] + (clicks * 5)
         lvlinc = getlevel(info[0]['level'],item['exp'])
         item['level'] = info[0]['level'] + lvlinc
@@ -960,7 +976,7 @@ def train(id):
     else:
         item = {}
         item['pokemonNo'] = info[0]['pokemonNo']
-        item['speciesName'] = str(info[0]['speciesName'], 'utf-8')
+        item['speciesName'] = str(info[0]['speciesName'], 'utf-8').capitalize()
         item['level'] = info[0]['level']
         item['gender'] = info[0]['gender']
         item['shiny'] = info[0]['shiny']

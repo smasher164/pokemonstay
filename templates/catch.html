@@ -14,10 +14,30 @@
         {% if msg %}
         <p><font color="red">{{ msg }}</font></p>
         {% endif %}
+        <center>
         <p>
             Time until next catch: {{wait_time}}
         </p>
         {% if mon_name %}
+        {% if mon_no < 10 %}
+        {% if mon_shiny == 0 %}
+            <img src="https://www.serebii.net/sunmoon/pokemon/00{{mon_no}}.png" width=200 height=200>
+        {% else %}
+            <img src="https://www.serebii.net/Shiny/SM/00{{mon_no}}.png" width=200 height=200>
+        {% endif %}
+        {% elif mon_no < 100 %}
+        {% if mon_shiny == 0 %}
+            <img src="https://www.serebii.net/sunmoon/pokemon/0{{mon_no}}.png" width=200 height=200>
+        {% else %}
+            <img src="https://www.serebii.net/Shiny/SM/0{{mon_no}}.png" width=200 height=200>
+        {% endif %}
+        {% else %}
+        {% if mon_shiny == 0 %}     
+                <img src="https://www.serebii.net/sunmoon/pokemon/{{mon_no}}.png" width=200 height=200>
+        {% else %}
+                <img src="https://www.serebii.net/Shiny/SM/{{mon_no}}.png" width=200 height=200>
+            {% endif %}
+        {% endif %}
         <p>
             You encountered {{mon_name}}!
             <div>
@@ -26,13 +46,16 @@
                 <p>Shiny: {{ mon_shiny}}</p>
             </div>
         </p>
+        <div class="btn-inline">
         <form method="post">
-            <button>Catch</button>
+            <button class="btn btn-primary">Catch</button> &nbsp; &nbsp;
             <input type="hidden" name="catch" value="True">
         </form>
         <form method="post">
-            <button>Run</button>
+            <button class="btn btn-primary">Run</button>
         </form>
+    </div>
+    </center>
         {% endif %}
     </body>
 </html>
