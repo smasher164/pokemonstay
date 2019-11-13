@@ -57,7 +57,6 @@ class Cursor():
                 yield x
     def close(self):
         self.conn.commit()
-        self.cursor.execute("UNLOCK TABLES")
         self.cursor.close()
         self.conn.close()
 
@@ -700,7 +699,6 @@ def tradeDaemon(rscID):
         res = make_response(jsonify({'err': "Room doesn't exist"}), status.NOT_FOUND)
         try:
             cursor = Cursor()
-            cursor.execute("LOCK TABLES temp_trades WRITE")
             data = tempfor(cursor, rscID)
             if data:
                 if data["user1Id"] == token["userid"] or data["user2Id"] == token["userid"]:
@@ -724,7 +722,6 @@ def tradeDaemon(rscID):
         res = make_response(jsonify({'err': "Room doesn't exist"}), status.NOT_FOUND)
         try:
             cursor = Cursor()
-            cursor.execute("LOCK TABLES temp_trades WRITE")
             data = tempfor(cursor, rscID)
             if data:
                 if data["user1Id"] == token["userid"]:
@@ -789,9 +786,6 @@ def tradeDaemon(rscID):
             return make_response(jsonify({'err': 'Invalid json'}), status.BAD_REQUEST)
         try:
             cursor = Cursor(buffered=True)
-            # cursor.execute("LOCK TABLES temp_trades WRITE")
-            # cursor.execute("LOCK TABLES temp_trades WRITE, trades WRITE")
-            # cursor.execute("LOCK TABLES temp_trades WRITE, owns WRITE, trades WRITE")
             
             # Trade is valid (exists, not expired)
             data = tempfor(cursor, rscID)
@@ -815,36 +809,30 @@ def tradeDaemon(rscID):
                 cursor.execute("UPDATE `temp_trades` SET confirm1 = %s, confirm2 = %s WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (data["confirm1"], data["confirm2"], rscID))
                 cursor.close()
                 return make_response('', status.OK)
-            print("confirm before lock")
-            # cursor.execute("LOCK TABLES temp_trades WRITE, owns WRITE")
-            print("confirm after lock")
-            cursor.execute("SELECT userId FROM owns WHERE ownsId=%s AND userId=%s ", (data["pokemon1"], data["user1Id"]))
-            if cursor.rowcount == 0 and data["pokemon1"] is not None:
-                data["pokemon1"] = None
-                data["confirm1"] = False
-                data["confirm2"] = False
-                res = make_response(jsonify({'err': 'Pokemon does not belong to user'}), status.BAD_REQUEST)
-            cursor.execute("SELECT userId FROM owns WHERE ownsId=%s AND userId=%s", (data["pokemon2"], data["user2Id"]))
-            if cursor.rowcount == 0 and data["pokemon2"] is not None:
-                data["pokemon2"] = None
-                data["confirm1"] = False
-                data["confirm2"] = False
-                res = make_response(jsonify({'err': 'Pokemon does not belong to user'}), status.BAD_REQUEST)
-                # Clear attributes in temp_trades
-                cursor.execute("UPDATE `temp_trades` SET pokemon1 = NULL, pokemon2 = NULL, confirm1 = 0, confirm2 = 0 WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (rscID,))
+            if data["pokemon1"] is not None:
+                cursor.execute("SELECT userId FROM owns WHERE ownsId=%s AND userId=%s ", (data["pokemon1"], data["user1Id"]))
+                if cursor.rowcount == 0:
+                    data["pokemon1"] = None
+                    data["confirm1"] = False
+                    data["confirm2"] = False
+                    res = make_response(jsonify({'err': 'Pokemon does not belong to user'}), status.BAD_REQUEST)
+                    cursor.execute("UPDATE `temp_trades` SET pokemon1 = NULL, pokemon2 = NULL, confirm1 = 0, confirm2 = 0 WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (rscID,))
+            
+            if data["pokemon2"] is not None:
+                cursor.execute("SELECT userId FROM owns WHERE ownsId=%s AND userId=%s", (data["pokemon2"], data["user2Id"]))
+                if cursor.rowcount == 0:
+                    data["pokemon2"] = None
+                    data["confirm1"] = False
+                    data["confirm2"] = False
+                    res = make_response(jsonify({'err': 'Pokemon does not belong to user'}), status.BAD_REQUEST)
+                    # Clear attributes in temp_trades
+                    cursor.execute("UPDATE `temp_trades` SET pokemon1 = NULL, pokemon2 = NULL, confirm1 = 0, confirm2 = 0 WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (rscID,))
 
             # Do the trade
             if data["confirm1"] and data["confirm2"]:
-                # 1. Set userid for pokemon1
-                if data["pokemon1"] is not None:
-                    cursor.execute("UPDATE `owns` SET userid = %s WHERE ownsId = %s", (data["user2Id"], data["pokemon1"]))
-                # 2. Set userid for pokemon2
-                if data["pokemon2"] is not None:
-                    cursor.execute("UPDATE `owns` SET userid = %s WHERE ownsId = %s", (data["user1Id"], data["pokemon2"]))
-                # 3. Move to trades
-                # cursor.execute("LOCK TABLES temp_trades WRITE, owns WRITE, trades WRITE")
+                # 1. Move to trades
                 cursor.execute("INSERT INTO `trades` (user1Id, user2Id, pokemon1, pokemon2) VALUES (%s, %s, %s, %s)", (data["user1Id"], data["user2Id"], data["pokemon1"], data["pokemon2"]))
-                # 4. Remove row in temp_trades
+                # 2. Remove row in temp_trades
                 cursor.execute("DELETE FROM `temp_trades` WHERE resourceId = %s", (rscID,))
                 res = make_response('', status.OK)
 
