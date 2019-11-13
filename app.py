@@ -510,7 +510,9 @@ def get_catchable(uid):
         args = (uid,)
         cursor.execute(query,args)
 
-        columns = tuple( [d[0] for d in cursor.description] )
+        columns = tuple( [d[0] for d in cursor.description])
+        if cursor.rowcount==0:
+            return None
         info = (dict(zip(columns, cursor.fetchone())))
         cursor.close()
         return info
