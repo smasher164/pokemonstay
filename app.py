@@ -923,7 +923,7 @@ def trained(id):
         item = {}
         item['pokemonNo'] = info[0]['pokemonNo']
         item['shiny'] = info[0]['shiny']
-        item['speciesName'] = str(info[0]['speciesName'], 'utf-8').capitalize
+        item['speciesName'] = str(info[0]['speciesName'], 'utf-8').capitalize()
         item['exp'] = info[0]['exp'] + (clicks * 5)
         lvlinc = getlevel(info[0]['level'],item['exp'])
         item['level'] = info[0]['level'] + lvlinc
