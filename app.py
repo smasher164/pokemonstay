@@ -3,15 +3,16 @@ from flask import Flask, request, render_template, redirect, jsonify, url_for, m
 from http import HTTPStatus as status
 from email_validator import validate_email
 import mysql.connector as db
+from mysql.connector.cursor import MySQLCursor
 import logging
 import secrets
+import string
 import re
 import bcrypt
 import datetime
+import time
 import jwt
 import numpy
-import numpy
-import datetime
 
 # Store application's state in this dictionary
 stay = {}
@@ -26,14 +27,6 @@ def env(s):
 # Use this flag for debug-specific logic
 stay["debug"] = env("DEBUG") == "True"
 
-# Connect to MariaDB
-stay["conn"] = db.connect(
-    host=env("DB_HOST"),
-    user=env("DB_USERNAME"),
-    password=env("DB_PASSWORD"),
-    database=env("DB_NAME"),
-)
-
 # Create secret key for JSON-WEB-TOKEN
 stay["jwt_secret"] = env("JWT_SECRET")
 
@@ -42,6 +35,31 @@ app = Flask(
     import_name="pokemonstay",
     static_url_path="/static",
 )
+
+class Cursor():
+    def __init__(self, *args, **kwargs):
+        self.conn = db.connect(
+            host=env("DB_HOST"),
+            user=env("DB_USERNAME"),
+            password=env("DB_PASSWORD"),
+            database=env("DB_NAME"),
+        )
+        self.cursor = self.conn.cursor(*args, **kwargs)
+    def __getattr__(self, name):
+        if name == "close":
+            return self.close
+        elif name == "commit":
+            return self.conn.commit
+        else:
+            return getattr(self.cursor, name)
+    def __iter__(self):
+        for x in self.cursor:
+                yield x
+    def close(self):
+        self.conn.commit()
+        self.cursor.execute("UNLOCK TABLES")
+        self.cursor.close()
+        self.conn.close()
 
 def redirback(u):
     res = make_response(redirect(u))
@@ -54,30 +72,35 @@ def clearref(r):
     res.set_cookie('referrer', value='', expires=0, httponly=True)
     return res
 
+# rand11 returns a url-safe 11-character cryptographically random
+# string (similar to youtube video IDs) composed of a-z, A-Z, 0-9, '-',
+# or '_'. This is meant to be used for temporary urls.
+def rand11():
+    alphabet = alphabet = string.ascii_letters + string.digits + "-_"
+    return ''.join(secrets.choice(alphabet) for i in range(11))
+
+def get_mon(cursor, userid):
+    cursor.execute("SELECT pokemonNo, level, gender, speciesName, gender, shiny, met, nickname, ownsId FROM `owns` natural join `pokemon` WHERE userId = %s", (userid,))
+    info = []
+    columns = tuple( [d[0] for d in cursor.description] )
+    for row in cursor:
+        info.append(dict(zip(columns, row)))
+    for row in info:
+        row['speciesName'] = row['speciesName'].capitalize()
+        if row['nickname'] is not None:
+            row['nickname'] = row['nickname']
+    return info
+
 @app.route("/myMon")
 def myMon():
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
         return redirback(url_for('root'))
     msg = request.args.get('msg', None)
-    #do a query based on user
+    # do a query based on user
     # display their pokemon nicknames with links to the pokedex page, rename, and release
-    cursor = stay["conn"].cursor(prepared=True)
-    query = ("SELECT pokemonNo, level, gender, speciesName, gender, shiny, met, nickname, ownsId FROM `owns` natural join `pokemon` "
-            "WHERE userId = %s")
-    #how do users work?
-    # temporarily just doing with userid = 1 (testing all other shit)
-    uid = token["userid"]
-    tup = (uid,)
-    cursor.execute(query, tup)
-    info = []
-    columns = tuple( [d[0] for d in cursor.description] )
-    for row in cursor:
-        info.append(dict(zip(columns, row)))
-    for item in info:
-        item['speciesName'] = str(item['speciesName'],'utf-8').capitalize()
-        if item['nickname'] is not None:
-            item['nickname'] = str(item['nickname'],'utf-8')
+    cursor = Cursor(buffered=True)
+    info = get_mon(cursor, token["userid"])
     size = len(info)
     cursor.close()
     return render_template("/myMon.html", info=info, size=size, msg=msg)
@@ -88,7 +111,7 @@ def release(id):
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
         return redirback(url_for('root'))
-    cursor = stay["conn"].cursor(prepared=True)
+    cursor = Cursor(prepared=True)
     # also make sure that the user owns this pokemon (via part of the query)
     # will have to adjust userId number later
     uid = token["userid"]
@@ -112,7 +135,6 @@ def release(id):
         query = ("DELETE FROM `owns` "
                 "WHERE ownsId = %s")
         cursor.execute(query, (id,))
-        stay["conn"].commit()
 
     cursor.close()
     return redirect(url_for('myMon',msg=msg), code=status.FOUND)
@@ -131,7 +153,7 @@ def rename_submit(id):
         return redirback(url_for('root'))
     if request.method == 'POST':
         nickname = request.form['nickname']
-        cursor = stay["conn"].cursor(prepared=True)
+        cursor = Cursor(prepared=True)
         # also make sure that the user owns this pokemon (via part of the query)
         # will have to adjust userId number later
         uid = token["userid"]
@@ -157,10 +179,9 @@ def rename_submit(id):
                 msg = "You just got rid of the nickname for mon " + info[0]['speciesName'] + " with mon id " + str(info[0]['ownsId'])
             query = ("UPDATE `owns` SET `nickname`=%s WHERE `ownsId`=%s")
             cursor.execute(query, (nickname,id))
-            stay["conn"].commit()
 
         cursor.close()
-
+        
         return redirect(url_for('myMon',msg=msg), code=status.FOUND)
 
     return redirect(url_for('myMon',msg="bad url"), code=status.FOUND)
@@ -170,7 +191,7 @@ def dexMain_view():
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
         return redirback(url_for('root'))
-    cursor = stay["conn"].cursor(prepared=True)
+    cursor = Cursor(prepared=True)
     query = ("SELECT pokemonNo, speciesName, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types ORDER By pokemonNo,typeName")
     cursor.execute(query)
     info = []
@@ -195,6 +216,7 @@ def dexMain_view():
             result.append(item)
             i+=1 
     cursor.close()
+    
     return render_template("/dexmain.html", info=result)
 
 @app.route("/dex/<id>")
@@ -202,7 +224,8 @@ def dex_view(id):
     token = authenticate(request.cookies.get('access_token'))
     if token is None:
         return redirback(url_for('root'))
-    cursor = stay["conn"].cursor(prepared=True)
+    cursor = Cursor(prepared=True)
+    # at most one match
     query = ("SELECT speciesName, pokemonNo, height, weight, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types Where pokemonNo=%s ORDER By pokemonNo")
     tup = (id,)
     cursor.execute(query, tup)
@@ -264,7 +287,7 @@ def dex_view(id):
     for row in cursor:
         info.append(dict(zip(columns, row)))
     for x in info:
-        c2 = stay["conn"].cursor(prepared=True)
+        c2 = Cursor(prepared=True)
         extra = []
         query = ("SELECT speciesName FROM pokemon where pokemonNo = %s")
         c2.execute(query,(x['from_pokemonNo'],))
@@ -287,7 +310,7 @@ def dex_view(id):
     for row in cursor:
         info.append(dict(zip(columns, row)))
     for x in info:
-        c2 = stay["conn"].cursor(prepared=True)
+        c2 = Cursor(prepared=True)
         extra = []
         query = ("SELECT speciesName FROM pokemon where pokemonNo = %s")
         c2.execute(query,(x['to_pokemonNo'],))
@@ -302,6 +325,7 @@ def dex_view(id):
     item['toLen'] = len(evolvesTo)
     result.append(item) 
     cursor.close()
+    
     return render_template("/dex.html", info=result)
 
 # Pre-compile password validation regexes
@@ -362,10 +386,11 @@ def auth():
 
         # Check db for preexisting record for that email
         try:
-            cursor = stay["conn"].cursor()
+            cursor = Cursor()
             cursor.execute("SELECT userid, passHash FROM Trainer WHERE email = %s", (email,))
             row = cursor.fetchone()
             cursor.close()
+            
             if row == None:
                 return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
         except Exception as err:
@@ -383,10 +408,10 @@ def auth():
 
         # Set lastLogin.
         try:
-            cursor = stay["conn"].cursor()
+            cursor = Cursor()
             cursor.execute("UPDATE Trainer SET lastLogin = %s WHERE userid = %s", (lastLogin, userid))
-            stay["conn"].commit()
             cursor.close()
+            
         except Exception as err:
             return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
 
@@ -408,10 +433,11 @@ def auth():
 
         # Check db for preexisting record for that email
         try:
-            cursor = stay["conn"].cursor()
+            cursor = Cursor()
             cursor.execute("SELECT userid FROM Trainer WHERE email = %s", (email,))
             nrows = len(cursor.fetchall())
             cursor.close()
+            
             if nrows > 0:
                 return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
         except:
@@ -436,10 +462,10 @@ def auth():
 
         # Insert into table
         try:
-            cursor = stay["conn"].cursor()
+            cursor = Cursor()
             cursor.execute("INSERT INTO Trainer (email, userName, passHash) VALUES (%s, %s, %s)", (email, userName, passHash))
-            stay["conn"].commit()
             cursor.close()
+            
         except Exception as err:
             return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
     return res
@@ -449,7 +475,7 @@ def rand_pkmn():
     def get_chance_weight(pokeNo):
         return 1
     
-    cursor = stay["conn"].cursor(buffered=True)
+    cursor = Cursor(buffered=True)
     query = ("SELECT pokemonNo, speciesName FROM `pokemon`")
     cursor.execute(query,())
     
@@ -480,7 +506,7 @@ def rand_pkmn():
 # Probably needs to be refactored/optimized later
 def get_catchable(uid):
     try:
-        cursor = stay["conn"].cursor(buffered=True)
+        cursor = Cursor(buffered=True)
         query = ("SELECT pokemonNo,speciesName,level,gender,shiny FROM `catchable` NATURAL JOIN `pokemon` where userid=%s")
         args = (uid,)
         cursor.execute(query,args)
@@ -505,7 +531,7 @@ def format_catch_time(d):
 def last_catch_expire(uid,expiration_duration):
     last_encounter_query=("SELECT lastCatch FROM `Trainer` where userid=%s")
     last_encounter_args=(uid,)
-    cursor = stay["conn"].cursor(buffered=True)
+    cursor = Cursor(buffered=True)
     cursor.execute(last_encounter_query,last_encounter_args)
     columns = tuple( [d[0] for d in cursor.description] )
     last_encounter_dict=dict(zip(columns, cursor.fetchone()))
@@ -553,12 +579,11 @@ def catch():
                 update_encounter_query=("Update `Trainer` SET lastCatch=%s WHERE userid=%s")
                 update_encounter_args=(datetime.datetime.now(),uid,)
                 
-                cursor = stay["conn"].cursor(buffered=True)
+                cursor = Cursor(buffered=True)
                 cursor.execute(delete_encounter_query,delete_encounter_args)
                 cursor.execute(insert_encounter_query,insert_encounter_args)
                 cursor.execute(update_encounter_query,update_encounter_args)
                 cursor.close()
-                stay['conn'].commit()
                 time_left=last_encounter_delta
             # Check `catchable` table to see if user can catch a pokemon
             pkmn_info=get_catchable(uid)
@@ -587,7 +612,7 @@ def catch():
             
             delete_encounter_query=("DELETE FROM `catchable` WHERE userid=%s")
             delete_encounter_args=(uid,)
-            cursor = stay["conn"].cursor(buffered=True)
+            cursor = Cursor(buffered=True)
             should_catch=request.form.get('catch', False)
             if should_catch:
                 insert_catch_query=("INSERT INTO `owns` "
@@ -600,11 +625,257 @@ def catch():
                 catch_message="Got away safely!"
             cursor.execute(delete_encounter_query,delete_encounter_args)
             cursor.close()
-            stay['conn'].commit()
             return redirect(url_for('myMon',msg=catch_message), code=status.FOUND)
         except Exception as err:
             print('catch: ', err)
             return redirect(url_for('catch',msg="The Pokemon broke free!",method="GET"), code=status.SEE_OTHER)
+
+@app.route("/trade", methods=["POST"])
+def create_trade():
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
+    # Create random resource id until we find one that isn't in the table.
+    l = []
+    try:
+        cursor = Cursor()
+        cursor.execute("SELECT resourceId FROM `temp_trades` WHERE expires > CURRENT_TIMESTAMP", ())
+        for row in cursor:
+            l.append(row[0])
+        cursor.close()
+        
+    except Exception as err:
+        print(err)
+        return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+    rscID = rand11()
+    while rscID in l:
+        rscID = rand11()
+    try:
+        cursor = Cursor()
+        exp = datetime.datetime.utcnow() + datetime.timedelta(days=1)
+        cursor.execute("INSERT INTO `temp_trades` (resourceId, expires) VALUES (%s,%s)", (rscID,exp))
+        cursor.close()
+    except Exception as err:
+        print(err)
+        return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+    return make_response(jsonify({'resourceID': rscID}), status.OK)
+
+def tempfor(cursor, rscID):
+    cursor.execute("SELECT * FROM `temp_trades` WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (rscID,))
+    row = cursor.fetchone()
+    if row == None:
+        return None
+    cols = tuple(d[0] for d in cursor.description)
+    data = dict(zip(cols, row))
+    data['resourceId'] = data['resourceId'].decode('utf-8')
+    return data
+
+@app.route("/trade/<rscID>", methods=["GET","POST"])
+def trade(rscID):
+    # Check DB to see if unexpired rscID exists
+    s = request.headers.get("Content-Type")
+    if s == "application/json;charset=UTF-8":
+        return tradeDaemon(rscID)
+    return tradeView(rscID)
+
+def tradeView(rscID):
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return redirback(url_for('root'))
+    return render_template("trade.html")
+
+valid_stageID = re.compile(r"^$|^\d+$")
+
+def tradeDaemon(rscID):
+    token = authenticate(request.cookies.get('access_token'))
+    if token is None:
+        return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
+    body = request.get_json()
+    try:
+        rtype = body['type']
+    except Exception as err:
+        print(err)
+        return make_response(jsonify({'err': 'Invalid json'}), status.BAD_REQUEST)
+    if rtype == "join":
+        res = make_response(jsonify({'err': "Room doesn't exist"}), status.NOT_FOUND)
+        try:
+            cursor = Cursor()
+            cursor.execute("LOCK TABLES temp_trades WRITE")
+            data = tempfor(cursor, rscID)
+            if data:
+                if data["user1Id"] == token["userid"] or data["user2Id"] == token["userid"]:
+                    res = make_response(jsonify({'err': "Already joined"}), status.BAD_REQUEST)
+                elif data["user1Id"] is None:
+                    # update into uid1
+                    cursor.execute("UPDATE `temp_trades` SET user1Id = %s WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (token["userid"],rscID))
+                    res = make_response('', status.OK)
+                elif data["user2Id"] is None:
+                    # update into uid2
+                    cursor.execute("UPDATE `temp_trades` SET user2Id = %s WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (token["userid"],rscID))
+                    res = make_response('', status.OK)
+                else:
+                    res = make_response(jsonify({'err': "Room is full"}), status.BAD_REQUEST)
+            cursor.close()
+            
+        except Exception as err:
+            print(err)
+            res = make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+    elif rtype == "leave":
+        res = make_response(jsonify({'err': "Room doesn't exist"}), status.NOT_FOUND)
+        try:
+            cursor = Cursor()
+            cursor.execute("LOCK TABLES temp_trades WRITE")
+            data = tempfor(cursor, rscID)
+            if data:
+                if data["user1Id"] == token["userid"]:
+                    cursor.execute("UPDATE `temp_trades` SET user1Id = %s, pokemon1 = %s WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (None,None,rscID))
+                    res = make_response('', status.OK)
+                elif data["user2Id"] == token["userid"]:
+                    cursor.execute("UPDATE `temp_trades` SET user2Id = %s, pokemon2 = %s WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (None,None,rscID))
+                    res = make_response('', status.OK)
+                else:
+                    res = make_response(jsonify({'err': "Cannot leave if not a member"}), status.BAD_REQUEST)
+            cursor.close()
+            
+        except Exception as err:
+            print(err)
+            res = make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+    elif rtype == "stage":
+        try:
+            stageID = body['stageID']
+        except Exception as err:
+            print(err)
+            return make_response(jsonify({'err': 'Invalid json'}), status.BAD_REQUEST)
+        if not valid_stageID.match(stageID):
+            return make_response(jsonify({'err': 'Invalid stage ID'}), status.BAD_REQUEST)
+        try:
+            cursor = Cursor(buffered=True)
+            # Trade is valid (exists, not expired)
+            data = tempfor(cursor, rscID)
+            if data is None:
+                cursor.close()
+                return make_response(jsonify({'err': 'Invalid resource'}), status.NOT_FOUND)
+            # User is in trade, capture position
+            pos = 1
+            if data["user1Id"] == token["userid"]:
+                pass
+            elif data["user2Id"] == token["userid"]:
+                pos = 2
+            else:
+                cursor.close()
+                return make_response(jsonify({'err': 'User is not in trade'}), status.BAD_REQUEST)
+            # Check that user actually owns this particular pokemon
+            if stageID != "":
+                cursor.execute("SELECT userId FROM owns WHERE ownsId=%s AND userId=%s", (stageID, token["userid"]))
+                if cursor.rowcount == 0:
+                    cursor.close()
+                    return make_response(jsonify({'err': 'Pokemon does not belong to user'}), status.BAD_REQUEST)
+            # Update pokemon that is staged
+            if stageID == "":
+                stageID = None
+            cursor.execute("UPDATE `temp_trades` SET pokemon{} = %s, confirm1 = 0, confirm2 = 0 WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP".format(pos), (stageID,rscID))
+            cursor.close()
+            res = make_response('', status.OK)
+        except Exception as err:
+            print("stage", err)
+            res = make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+    elif rtype == "confirm":
+        try:
+            value = body['value']
+            if type(value) != bool:
+                raise Exception("bad bool")
+        except Exception as err:
+            print(err)
+            return make_response(jsonify({'err': 'Invalid json'}), status.BAD_REQUEST)
+        try:
+            cursor = Cursor(buffered=True)
+            # cursor.execute("LOCK TABLES temp_trades WRITE")
+            # cursor.execute("LOCK TABLES temp_trades WRITE, trades WRITE")
+            # cursor.execute("LOCK TABLES temp_trades WRITE, owns WRITE, trades WRITE")
+            
+            # Trade is valid (exists, not expired)
+            data = tempfor(cursor, rscID)
+            if data is None:
+                cursor.close()
+                return make_response(jsonify({'err': 'Invalid resource'}), status.NOT_FOUND)
+
+            # User is in trade, capture position
+            pos = 1
+            if data["user1Id"] == token["userid"]:
+                pass
+            elif data["user2Id"] == token["userid"]:
+                pos = 2
+            else:
+                cursor.close()
+                return make_response(jsonify({'err': 'User is not in trade'}), status.BAD_REQUEST)
+
+            # Check that both users are confirmed
+            data["confirm{}".format(pos)]=value
+            if not data["confirm1"] or not data["confirm2"]:
+                cursor.execute("UPDATE `temp_trades` SET confirm1 = %s, confirm2 = %s WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (data["confirm1"], data["confirm2"], rscID))
+                cursor.close()
+                return make_response('', status.OK)
+            print("confirm before lock")
+            # cursor.execute("LOCK TABLES temp_trades WRITE, owns WRITE")
+            print("confirm after lock")
+            cursor.execute("SELECT userId FROM owns WHERE ownsId=%s AND userId=%s ", (data["pokemon1"], data["user1Id"]))
+            if cursor.rowcount == 0 and data["pokemon1"] is not None:
+                data["pokemon1"] = None
+                data["confirm1"] = False
+                data["confirm2"] = False
+                res = make_response(jsonify({'err': 'Pokemon does not belong to user'}), status.BAD_REQUEST)
+            cursor.execute("SELECT userId FROM owns WHERE ownsId=%s AND userId=%s", (data["pokemon2"], data["user2Id"]))
+            if cursor.rowcount == 0 and data["pokemon2"] is not None:
+                data["pokemon2"] = None
+                data["confirm1"] = False
+                data["confirm2"] = False
+                res = make_response(jsonify({'err': 'Pokemon does not belong to user'}), status.BAD_REQUEST)
+                # Clear attributes in temp_trades
+                cursor.execute("UPDATE `temp_trades` SET pokemon1 = NULL, pokemon2 = NULL, confirm1 = 0, confirm2 = 0 WHERE resourceId = %s AND expires > CURRENT_TIMESTAMP", (rscID,))
+
+            # Do the trade
+            if data["confirm1"] and data["confirm2"]:
+                # 1. Set userid for pokemon1
+                if data["pokemon1"] is not None:
+                    cursor.execute("UPDATE `owns` SET userid = %s WHERE ownsId = %s", (data["user2Id"], data["pokemon1"]))
+                # 2. Set userid for pokemon2
+                if data["pokemon2"] is not None:
+                    cursor.execute("UPDATE `owns` SET userid = %s WHERE ownsId = %s", (data["user1Id"], data["pokemon2"]))
+                # 3. Move to trades
+                # cursor.execute("LOCK TABLES temp_trades WRITE, owns WRITE, trades WRITE")
+                cursor.execute("INSERT INTO `trades` (user1Id, user2Id, pokemon1, pokemon2) VALUES (%s, %s, %s, %s)", (data["user1Id"], data["user2Id"], data["pokemon1"], data["pokemon2"]))
+                # 4. Remove row in temp_trades
+                cursor.execute("DELETE FROM `temp_trades` WHERE resourceId = %s", (rscID,))
+                res = make_response('', status.OK)
+
+            cursor.close()
+        except Exception as err:
+            print("confirm", err)
+            res = make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+    elif rtype == "tradePoll":
+        try:
+            cursor = Cursor()
+            data = tempfor(cursor, rscID)
+            if data is None:
+                return make_response(jsonify({'err': 'Invalid resource'}), status.NOT_FOUND)
+            data["userid"] = token["userid"]
+            cursor.close()
+            
+            res = make_response(jsonify(data), status.OK)
+        except Exception as err:
+            print("tradePoll", err)
+            res = make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+    elif rtype == "boxPoll":
+        try:
+            cursor = Cursor(buffered=True)
+            info = get_mon(cursor, token["userid"])
+            cursor.close()
+            
+            res = make_response(jsonify(info), status.OK)
+        except Exception as err:
+            print("boxPoll", err)
+            res = make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+    return res
 
 @app.route("/")
 def root():
@@ -629,7 +900,7 @@ def trained(id):
     if request.method == 'POST':
         msg=""
         clicks = int(request.form['clicks'])
-        cursor = stay["conn"].cursor(prepared=True)
+        cursor = Cursor(prepared=True)
         query = ("SELECT pokemonNo, speciesName, level, gender, nickname, shiny, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId = %s")
         tup = (id,uid)
         #Query returns either a single row or nothing if ownsId is invalid
@@ -661,10 +932,8 @@ def trained(id):
         result.append(item)
         query = ("UPDATE `owns` SET `exp`=%s, `level`=%s WHERE `ownsId`=%s")
         #cursor.execute(query, (item['exp'],id))
-        #stay["conn"].commit()
         #query = ("UPDATE `owns` SET `level`=%s WHERE `ownsId`=%s")
         cursor.execute(query, (item['exp'],item['level'],id))
-        stay["conn"].commit()
         if lvlinc > 0:
             if info[0]['nickname'] is not None:
                 msg = item['nickname'] + " has leveled up to level " + str(item['level'])
@@ -684,7 +953,7 @@ def train(id):
     if token is None:
         return redirback(url_for('root'))
     uid = token['userid']
-    cursor = stay["conn"].cursor(prepared=True)
+    cursor = Cursor(prepared=True)
     query = ("SELECT pokemonNo, speciesName, level, gender, nickname, shiny, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId=%s")
     tup = (id,uid)
     #Query returns either a single row or nothing if ownsId is invalid
@@ -716,10 +985,6 @@ def train(id):
         result.append(item)
     cursor.close()
     return render_template("/train.html", info=result, msg=msg)
-
-
-
-
 
 def getlevel(lvl,exp):
     gain=0

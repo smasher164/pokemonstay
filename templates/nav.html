@@ -1,13 +1,25 @@
 <nav>
-        <button id="nav-logout" class="nav-link float-right btn btn-primary">Logout</button>                
-        <button id="nav-dex" class="nav-link float-right btn btn-primary">Pokédex</button>
-        <button id="nav-catch" class="nav-link float-right btn btn-primary">Catch</button>
-        <button id="nav-box" class="nav-link float-right btn btn-primary">Box</button>
+    <button id="nav-logout" class="nav-link float-right btn btn-primary">Logout</button>                
+    <button id="nav-dex" class="nav-link float-right btn btn-primary">Pokédex</button>
+    <button id="nav-catch" class="nav-link float-right btn btn-primary">Catch</button>
+    <button id="nav-box" class="nav-link float-right btn btn-primary">Box</button>
     
     <script type="text/javascript">
         document.querySelector("#nav-box").addEventListener('click', e => window.location.replace('/myMon'))
         document.querySelector("#nav-dex").addEventListener('click', e => window.location.replace('/pokedex'))
         document.querySelector("#nav-catch").addEventListener('click', e => window.location.replace('/catch'))
+        document.querySelector("#nav-trade").addEventListener('click', e => {
+            var req = new XMLHttpRequest()
+            req.responseType = 'json'
+            req.addEventListener('load', ev => {
+                if (ev.target.status == 200) {
+                    window.location.replace("/trade/"+ev.target.response.resourceID)
+                }
+            })
+            req.open('POST', '/trade')
+            req.setRequestHeader("Content-Type", "application/json;charset=UTF-8")
+            req.send(JSON.stringify({}))
+        })
         document.querySelector("#nav-logout").addEventListener('click', e => {
             var req = new XMLHttpRequest()
             req.responseType = 'json'
