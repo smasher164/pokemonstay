@@ -994,13 +994,17 @@ def trained(token, id):
     if info[0]['nickname'] is not None:
         item['nickname'] = info[0]['nickname']
     item['id'] = id
-    expNeeded = pow(item['level'] + 1, 3) - item['exp']
-    item['expNeeded'] = expNeeded
-    result.append(item)
     query = ("UPDATE `owns` SET `exp`=%s, `level`=%s WHERE `ownsId`=%s")
     #cursor.execute(query, (item['exp'],id))
     #query = ("UPDATE `owns` SET `level`=%s WHERE `ownsId`=%s")
     cursor.execute(query, (item['exp'],item['level'],id))
+    totalExp = pow(item['level'] + 1, 3)
+    levelExp = pow(item['level'], 3)
+    if item['level'] == 1:
+            levelExp -=1
+    expNeeded = totalExp - levelExp
+    item['expNeeded'] = expNeeded
+    item['exp'] = item['exp'] - levelExp
     # evolve if needed!
     cursor.execute("SELECT owns.level as Olevel, evolves.level as Elevel, owns.gender as Ogender, evolves.gender as Egender,to_pokemonNo FROM owns JOIN evolves WHERE owns.pokemonNo = evolves.from_pokemonNo AND triggerId=1 AND ownsId=%s",(id,))
     columns = tuple( [d[0] for d in cursor.description])
@@ -1043,6 +1047,7 @@ def trained(token, id):
         else:
             msg = item['speciesName'] + " has evolved!"
     cursor.close()
+    result.append(item)
     #return render_template("/train.html", info=result, msg=msg)
     return make_response(jsonify(info=result,msg=msg), status.OK)
 
@@ -1074,12 +1079,16 @@ def train(token, id):
         item['shiny'] = info[0]['shiny']
         if info[0]['nickname'] is not None:
             item['nickname'] = str(info[0]['nickname'], 'utf-8')
-        item['exp'] = info[0]['exp']
         item['id'] = id
 
-        expNeeded = pow(info[0]['level'] + 1, 3) - info[0]['exp']
+        totalExp = pow(item['level'] + 1, 3)
+        levelExp = pow(item['level'], 3)
+        if item['level'] == 1:
+            levelExp -=1
+        expNeeded = totalExp - levelExp
         item['expNeeded'] = expNeeded
-
+        item['exp'] = info[0]['exp'] - levelExp
+        
         result.append(item)
     cursor.close()
     return render_template("/train.html", info=result, msg=msg)
