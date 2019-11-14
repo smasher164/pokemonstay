@@ -37,6 +37,10 @@
                 <img src="https://www.serebii.net/Shiny/SM/{{info[0].pokemonNo}}.png" width=200 height=200>
             {% endif %}
         {% endif %}
+        <div class="progress w-50">
+            <div id="progressbar" class="progress-bar progress-bar-striped " role="progressbar"></div>
+            <div id="progressbar-remaining" class="progress-bar progress-bar-striped " style="background-color: gray;" role="progressbar"></div>
+        </div>
         <p id="training-text">
             {% if info[0].nickname %}
             You're training {{ info[0].nickname }} the {{ info[0].speciesName }}.
@@ -71,6 +75,10 @@
     <script type="text/javascript">
         let trainpara = document.querySelector("#training-text")
         let message = document.querySelector("#message")
+        let progressbar = document.querySelector("#progressbar")
+        let progressbar_remaining = document.querySelector("#progressbar-remaining")
+        let curexp = {{(info[0].exp/(info[0].exp + info[0].expNeeded))*100}}
+        progressUpdate(curexp)
         let counter = 0
         document.querySelector("#train-Train").addEventListener('click', e => {
             counter = counter + 1
@@ -92,6 +100,8 @@
             if (ev.target.status == 200){
                 trainpara.textContent = stringHelper(ev.target.response.info[0])
                 message.textContent = ev.target.response.msg
+                curexp = (ev.target.response.info[0].exp/(ev.target.response.info[0].exp + ev.target.response.info[0].expNeeded))*100
+                progressUpdate(curexp)
             }
             })
             let url = new URL(document.URL)
@@ -103,6 +113,11 @@
             document.getElementById("clicks").value = counter
         }
 
+        function progressUpdate(curexp){
+            progressbar.style.width = `${curexp}%`
+            progressbar_remaining.style.width = `${100-curexp}%`
+        }
+        
 
         function stringHelper(data){
             let s = ""
