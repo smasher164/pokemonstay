@@ -11,6 +11,8 @@
     {% include 'nav.html' %}
     <h1>Pokedex Entry</h1>
         {% for item in info %}
+        <center>    
+        <h2>{{item.pokemonNo }} {{ item.speciesName }}</h2>
         {% if item.pokemonNo < 10 %}
         <figure>       
                 <img src="https://www.serebii.net/sunmoon/pokemon/00{{item.pokemonNo}}.png" width=200 height=200>
@@ -41,12 +43,11 @@
         {% endif %}
    
         {% if item.typeName2 %}
-            <h2>{{item.pokemonNo }} {{ item.speciesName }}</h2>
+            
             <p>Types: <img src={{item.typeName }} width=50 height=20> <img src={{item.typeName2}} width=50 height=20></p>
             <p>Height: {{item.height}} m</p>
             <p>Weight: {{item.weight}} kg</p>
             {% else %}
-            <h2>{{item.pokemonNo }} {{ item.speciesName }}</h2>
             <p>Type: <img src={{item.typeName }} width=50 height=20></p>
             <p>Height: {{item.height}} m</p>
             <p>Weight: {{item.weight}} kg</p>
@@ -85,6 +86,7 @@
                     {% endfor %}
                     </p>
             {% endfor %}
-        
+            
+        </center>
 </body>
 </html>

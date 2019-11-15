@@ -1002,9 +1002,9 @@ def trained(token, id):
     levelExp = pow(item['level'], 3)
     if item['level'] == 1:
             levelExp -=1
-    expNeeded = totalExp - levelExp
-    item['expNeeded'] = expNeeded
     item['exp'] = item['exp'] - levelExp
+    expNeeded = totalExp - levelExp
+    item['expNeeded'] = expNeeded - item['exp']
     # evolve if needed!
     cursor.execute("SELECT owns.level as Olevel, evolves.level as Elevel, owns.gender as Ogender, evolves.gender as Egender,to_pokemonNo FROM owns JOIN evolves WHERE owns.pokemonNo = evolves.from_pokemonNo AND triggerId=1 AND ownsId=%s",(id,))
     columns = tuple( [d[0] for d in cursor.description])
@@ -1085,10 +1085,9 @@ def train(token, id):
         levelExp = pow(item['level'], 3)
         if item['level'] == 1:
             levelExp -=1
-        expNeeded = totalExp - levelExp
-        item['expNeeded'] = expNeeded
         item['exp'] = info[0]['exp'] - levelExp
-        
+        expNeeded = totalExp - levelExp
+        item['expNeeded'] = expNeeded - item['exp']
         result.append(item)
     cursor.close()
     return render_template("/train.html", info=result, msg=msg)
@@ -1096,10 +1095,10 @@ def train(token, id):
 def getlevel(lvl,exp):
     gain=0
     count=1
-    if pow((lvl+count),3) < exp:
+    if pow((lvl+count),3) <= exp:
         gain = 1
         count+=1
-        while pow(lvl+count, 3) < exp:
+        while pow(lvl+count, 3) <= exp:
             gain+=1
             count+=1
     return gain

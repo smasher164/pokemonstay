@@ -11,6 +11,7 @@
     {% include 'nav.html' %}
     <h1>My Mon</h1>
     <center>
+    <input type="text" id="search" onkeyup="filter()" placeholder="Search">
     {% if msg %}
     <p><font color="red">{{ msg }}</font></p>
     {% endif %}
@@ -18,7 +19,7 @@
     <p>Sorry, you don't have any mon</p>
     {% endif %}
     {% if size != 0 %}
-    <table class="table" style="width:70%;">
+    <table id="mymon" class="table" style="width:70%;">
         <tr>
           <th>Mon</th>
           <th>Nickname</th>
@@ -69,6 +70,33 @@
     </table>
 </center>
     {% endif %}
-
+    <script>
+            function filter(){
+              var input, filter, table, tr, td, i, txtValue;
+              input = document.getElementById("search");
+              filter = input.value.toUpperCase();
+              table = document.getElementById("mymon");
+              tr = table.getElementsByTagName("tr");
+      
+              // Loop through all table rows, and hide those who don't match the search query
+              for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[0];
+                td1 = tr[i].getElementsByTagName("td")[1];
+                td2 = tr[i].getElementsByTagName("td")[2];
+                td3 = tr[i].getElementsByTagName("td")[3];
+                if (td) {
+                  txtValue = td.textContent || td.innerText;
+                  txtValue1 = td1.textContent || td1.innerText;
+                  txtValue2 = td2.textContent || td2.innerText;
+                  txtValue3 = td3.textContent || td3.innerText;
+                  if (txtValue.toUpperCase().includes(filter)||txtValue1.toUpperCase().includes(filter)||txtValue2.toUpperCase().includes(filter)||txtValue3.toUpperCase().includes(filter)){
+                    tr[i].style.display = "";
+                  } else {
+                    tr[i].style.display = "none";
+                  }
+                }
+              }
+            }
+          </script>
 </body>
 </html>

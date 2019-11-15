@@ -40,6 +40,9 @@ header {
     text-align: center;
 }
 
+#search{
+    margin-bottom: 1em;
+}
 header img {
     width: 300px;
 }

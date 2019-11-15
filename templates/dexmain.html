@@ -11,27 +11,55 @@
     {% include 'nav.html' %}
     <h1>Pokedex</h1>
     <center>
-    <table class="table" style="width:70%;">
+    <input type="text" id="search" onkeyup="filter()" placeholder="Search">
+
+    <table id="dextable" class="table table-striped table-bordered table-sm"" style="width:70%;">
         <tr>
           <th>Pokemon Number</th>
           <th>Pokemon Name</th>
           <th>Type</th>
-          <th></th>
         </tr>
         {% for item in info %}
         <tr>
             <td>{{item.pokemonNo }}</td>
             {% if item.pokemonNo < 10 %}
-            <td><img src="http://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png"/>&nbsp;<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            <td><img src="http://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png" alt="{{item.speciesName}}"/>&nbsp;<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
             {% elif item.pokemonNo < 100 %}
-            <td><img src="http://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"/>&nbsp;<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            <td><img src="http://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"alt="{{item.speciesName}}"/>&nbsp;<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
             {% else %}
-            <td><img src="http://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"/>&nbsp;<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+            <td><img src="http://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"alt="{{item.speciesName}}"/>&nbsp;<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
             {% endif %}
-            <td><img src="https://www.serebii.net/pokedex-bw/type/{{item.typeName }}.gif" width=50 height=20>&nbsp;<img src="https://www.serebii.net/pokedex-bw/type/{{item.typeName2}}.gif" width=50 height=20></td>
+            <td><img src="https://www.serebii.net/pokedex-bw/type/{{item.typeName }}.gif" alt="{{item.typeName}}"width=50 height=20/>&nbsp;<img src="https://www.serebii.net/pokedex-bw/type/{{item.typeName2}}.gif" alt="{{item.typeName2}}" width=50 height=20><p hidden>{{item.typeName}} {{item.typeName2}}</p></td>
         </tr>
         {% endfor %}
       </table>
     </center>
+
+    <script>
+      function filter(){
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("search");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("dextable");
+        tr = table.getElementsByTagName("tr");
+
+        // Loop through all table rows, and hide those who don't match the search query
+        for (i = 0; i < tr.length; i++) {
+          td = tr[i].getElementsByTagName("td")[0];
+          td1 = tr[i].getElementsByTagName("td")[1];
+          td2 = tr[i].getElementsByTagName("td")[2];
+          if (td) {
+            txtValue = td.textContent || td.innerText;
+            txtValue1 = td1.textContent || td1.innerText;
+            txtValue2 = td2.textContent || td2.innerText;
+            if (txtValue.toUpperCase().includes(filter)||txtValue1.toUpperCase().includes(filter)||txtValue2.toUpperCase().includes(filter)||txtValue2.toUpperCase().includes(filter.split(" ").reverse().join(" "))){
+              tr[i].style.display = "";
+            } else {
+              tr[i].style.display = "none";
+            }
+          }
+        }
+      }
+    </script>
 </body>
 </html>
