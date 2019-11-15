@@ -1020,6 +1020,7 @@ def trained(token, id):
                         # evolve!
                         cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(ev['to_pokemonNo'],id))
                         evolved = True
+                        item['pokemonNo'] = ev['to_pokemonNo']
             else:
                 evolution = numpy.random.randint(cursor.rowcount) + 1
                 ev = []
@@ -1029,12 +1030,14 @@ def trained(token, id):
                     # evolve!
                     cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(ev['to_pokemonNo'],id))
                     evolved = True
+                    item['pokemonNo'] = ev['to_pokemonNo']
         else:
             ev = (dict(zip(columns, cursor.fetchone())))
             if ((ev['Egender'] is None or ev['Egender'] == ev['Ogender']) and ev['Olevel'] >= ev['Elevel']):
                 # evolve!
                 cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(ev['to_pokemonNo'],id))
                 evolved = True
+                item['pokemonNo'] = ev['to_pokemonNo']
     if not evolved:        
         if lvlinc > 0:
             if info[0]['nickname'] is not None:
@@ -1046,6 +1049,13 @@ def trained(token, id):
             msg = item['nickname'] + " has evolved!"
         else:
             msg = item['speciesName'] + " has evolved!"
+    item['evolve'] = evolved
+    if evolved:
+        query = ("SELECT speciesName FROM `pokemon` WHERE pokemonNo=%s")
+        cursor.execute(query, (item['pokemonNo'],))
+        columns = tuple( [d[0] for d in cursor.description])
+        ev = (dict(zip(columns, cursor.fetchone())))
+        item['speciesName'] = ev['speciesName'].capitalize()
     cursor.close()
     result.append(item)
     #return render_template("/train.html", info=result, msg=msg)
