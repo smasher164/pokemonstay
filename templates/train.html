@@ -87,7 +87,7 @@
             document.getElementById("clicks").value = counter
         }) 
         document.querySelector("#train-Submit").addEventListener('click', e => submit(e) ) 
-        setInterval(submit, 120000)
+        let timer = setInterval(submit, 120000)
 
         function submit(e){
             if(counter == 0){
@@ -96,17 +96,20 @@
             let req = new XMLHttpRequest()
             req.responseType = 'json'
             req.addEventListener('load', ev => {
-            console.log(ev.target.response)
-            console.log(ev.target.status)
-            if (ev.target.status == 200){
-                if (ev.target.response.info[0].evolve){
-                    pkmimg.src = imgChange(ev.target.response.info[0])
+                console.log(ev.target.response)
+                console.log(ev.target.status)
+                if (ev.target.status == 200){
+                    if (ev.target.response.info[0].evolve){
+                        pkmimg.src = imgChange(ev.target.response.info[0])
+                    }
+                    trainpara.textContent = stringHelper(ev.target.response.info[0])
+                    message.textContent = ev.target.response.msg
+                    curexp = (ev.target.response.info[0].exp/(ev.target.response.info[0].exp + ev.target.response.info[0].expNeeded))*100
+                    progressUpdate(curexp)
+                    // Reset timer when we receive a response.
+                    clearInterval(timer)
+                    timer = setInterval(submit, 120000)
                 }
-                trainpara.textContent = stringHelper(ev.target.response.info[0])
-                message.textContent = ev.target.response.msg
-                curexp = (ev.target.response.info[0].exp/(ev.target.response.info[0].exp + ev.target.response.info[0].expNeeded))*100
-                progressUpdate(curexp)
-            }
             })
             let url = new URL(document.URL)
             req.open('POST', '/train/submit/{{info[0].id}}')
