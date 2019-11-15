@@ -1005,6 +1005,8 @@ def trained(token, id):
     item['exp'] = item['exp'] - levelExp
     expNeeded = totalExp - levelExp
     item['expNeeded'] = expNeeded - item['exp']
+    if item['level'] == 100:
+            item['exp'] = 0
     # evolve if needed!
     cursor.execute("SELECT owns.level as Olevel, evolves.level as Elevel, owns.gender as Ogender, evolves.gender as Egender,to_pokemonNo FROM owns JOIN evolves WHERE owns.pokemonNo = evolves.from_pokemonNo AND triggerId=1 AND ownsId=%s",(id,))
     columns = tuple( [d[0] for d in cursor.description])
@@ -1098,6 +1100,8 @@ def train(token, id):
         item['exp'] = info[0]['exp'] - levelExp
         expNeeded = totalExp - levelExp
         item['expNeeded'] = expNeeded - item['exp']
+        if item['level'] == 100:
+            item['exp'] = 0
         result.append(item)
     cursor.close()
     return render_template("/train.html", info=result, msg=msg)
