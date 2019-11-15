@@ -20,21 +20,21 @@
         {% if info %}
         {% if info[0].pokemonNo < 10 %}
         {% if info[0].shiny == 0 %}
-            <img src="https://www.serebii.net/sunmoon/pokemon/00{{info[0].pokemonNo}}.png" width=200 height=200>
+            <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/00{{info[0].pokemonNo}}.png" width=200 height=200>
         {% else %}
-            <img src="https://www.serebii.net/Shiny/SM/00{{info[0].pokemonNo}}.png" width=200 height=200>
+            <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/00{{info[0].pokemonNo}}.png" width=200 height=200>
         {% endif %}
         {% elif info[0].pokemonNo < 100 %}
         {% if info[0].shiny == 0 %}
-            <img src="https://www.serebii.net/sunmoon/pokemon/0{{info[0].pokemonNo}}.png" width=200 height=200>
+            <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/0{{info[0].pokemonNo}}.png" width=200 height=200>
         {% else %}
-            <img src="https://www.serebii.net/Shiny/SM/0{{info[0].pokemonNo}}.png" width=200 height=200>
+            <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/0{{info[0].pokemonNo}}.png" width=200 height=200>
         {% endif %}
         {% else %}
         {% if info[0].shiny == 0 %}     
-                <img src="https://www.serebii.net/sunmoon/pokemon/{{info[0].pokemonNo}}.png" width=200 height=200>
+                <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/{{info[0].pokemonNo}}.png" width=200 height=200>
         {% else %}
-                <img src="https://www.serebii.net/Shiny/SM/{{info[0].pokemonNo}}.png" width=200 height=200>
+                <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/{{info[0].pokemonNo}}.png" width=200 height=200>
             {% endif %}
         {% endif %}
         <div class="progress w-50">
@@ -74,6 +74,7 @@
 
     <script type="text/javascript">
         let trainpara = document.querySelector("#training-text")
+        let pkmimg = document.querySelector("#pkmimg")
         let message = document.querySelector("#message")
         let progressbar = document.querySelector("#progressbar")
         let progressbar_remaining = document.querySelector("#progressbar-remaining")
@@ -98,6 +99,9 @@
             console.log(ev.target.response)
             console.log(ev.target.status)
             if (ev.target.status == 200){
+                if (ev.target.response.info[0].evolve){
+                    pkmimg.src = imgChange(ev.target.response.info[0])
+                }
                 trainpara.textContent = stringHelper(ev.target.response.info[0])
                 message.textContent = ev.target.response.msg
                 curexp = (ev.target.response.info[0].exp/(ev.target.response.info[0].exp + ev.target.response.info[0].expNeeded))*100
@@ -118,6 +122,30 @@
             progressbar_remaining.style.width = `${100-curexp}%`
         }
         
+        function imgChange(data){
+            if(data.shiny==0){
+                if (data.pokemonNo < 10){
+                    return `https://www.serebii.net/sunmoon/pokemon/00${data.pokemonNo}.png`
+                }
+                else if(data.pokemonNo < 100) {
+                    return `https://www.serebii.net/sunmoon/pokemon/0${data.pokemonNo}.png`
+                }
+                else{
+                    return `https://www.serebii.net/sunmoon/pokemon/${data.pokemonNo}.png`
+                }
+            }
+            else{
+                if (data.pokemonNo < 10){
+                    return `https://www.serebii.net/Shiny/SM/00${data.pokemonNo}.png`
+                }
+                else if(data.pokemonNo < 100) {
+                    return `https://www.serebii.net/Shiny/SM/0${data.pokemonNo}.png`
+                }
+                else{
+                    return `https://www.serebii.net/Shiny/SM/${data.pokemonNo}.png`
+                }
+            }
+        }
 
         function stringHelper(data){
             let s = ""
