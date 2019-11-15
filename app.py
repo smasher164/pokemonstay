@@ -956,8 +956,8 @@ def root():
                 to = ref
         except:
             pass
-        return clearref(redirect(to, code=status.FOUND))
-    return updateToken(token, make_response(render_template("auth.html")))
+        return updateToken(token, clearref(redirect(to, code=status.FOUND)))
+    return render_template("auth.html")
 
 @app.route("/train/submit/<id>", methods=['POST'])
 @login_required
