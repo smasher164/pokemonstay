@@ -986,7 +986,7 @@ def trained(token, id):
     item['shiny'] = info[0]['shiny']
     item['speciesName'] = info[0]['speciesName'].capitalize()
     item['exp'] = info[0]['exp'] + (clicks * 5)
-    lvlinc = getlevel(info[0]['level'],item['exp'])
+    lvlinc = getlevelinc(info[0]['level'],item['exp'])
     item['level'] = info[0]['level'] + lvlinc
     if item['level'] >= 100:
         item['level'] = 100
@@ -1092,9 +1092,11 @@ def train(token, id):
     cursor.close()
     return render_template("/train.html", info=result, msg=msg)
 
-def getlevel(lvl,exp):
+def getlevelinc(lvl,exp):
     gain=0
     count=1
+    if lvl == 100:
+        return 0
     if pow((lvl+count),3) <= exp:
         gain = 1
         count+=1
