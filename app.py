@@ -871,7 +871,7 @@ def tradeDaemon(rscID):
                         if info['Egender'] is None or info['Egender'] == info['Ogender']:
                             # evolve!
                             cursor.execute("UPDATE owns SET pokemonNo=%s WHERE ownsId=%s",(info['to_pokemonNo'],data["pokemon1"]))
-                # 4. Evolve pokemon1 if needed
+                # 4. Evolve pokemon2 if needed
                 cursor.execute("SELECT owns.gender as Ogender, evolves.gender as Egender,to_pokemonNo FROM owns JOIN evolves WHERE owns.pokemonNo = evolves.from_pokemonNo AND triggerId=2 AND ownsId=%s",(data["pokemon2"],))
                 # 4.5 check triggers and gender
                 columns = tuple( [d[0] for d in cursor.description])
