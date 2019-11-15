@@ -2,8 +2,8 @@ import os
 from flask import Flask, request, render_template, redirect, jsonify, url_for, make_response
 from http import HTTPStatus as status
 from email_validator import validate_email
+from functools import wraps
 import mysql.connector as db
-from mysql.connector.cursor import MySQLCursor
 import logging
 import secrets
 import string
@@ -60,6 +60,55 @@ class Cursor():
         self.cursor.close()
         self.conn.close()
 
+def updateToken(token, res):
+    # Get timestamp early
+    lastLogin = datetime.datetime.utcnow()
+
+    # Check db for preexisting record for that userid
+    try:
+        cursor = Cursor()
+        cursor.execute("SELECT email FROM Trainer WHERE userid = %s", (token["userid"],))
+        row = cursor.fetchone()
+        cursor.close()
+        
+        if row == None:
+            return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
+    except Exception as err:
+        return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+
+    (email,) = row
+
+    # Set lastLogin.
+    try:
+        cursor = Cursor()
+        cursor.execute("UPDATE Trainer SET lastLogin = %s WHERE userid = %s", (lastLogin, token["userid"]))
+        cursor.close()
+        
+    except Exception as err:
+        return make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
+
+    # Set JWT
+    exp = datetime.datetime.utcnow() + datetime.timedelta(days=1)
+    token = jwt.encode({
+        'userid': token["userid"],
+        'email': email.decode("utf-8"),
+        'exp': exp,
+    }, stay["jwt_secret"], algorithm='HS256')
+    res.set_cookie('access_token', value=token, expires=exp, httponly=True)
+    return res
+
+def login_required(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        token = authenticate(request.cookies.get('access_token'))
+        s = request.headers.get("Content-Type")
+        if token is None:
+            if s == "application/json;charset=UTF-8":
+                return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
+            return redirback(url_for('root'))
+        return updateToken(token, make_response(f(token, *args, **kwargs)))
+    return wrap
+
 def redirback(u):
     res = make_response(redirect(u))
     exp = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
@@ -91,10 +140,8 @@ def get_mon(cursor, userid):
     return info
 
 @app.route("/myMon")
-def myMon():
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return redirback(url_for('root'))
+@login_required
+def myMon(token):
     msg = request.args.get('msg', None)
     # do a query based on user
     # display their pokemon nicknames with links to the pokedex page, rename, and release
@@ -104,12 +151,9 @@ def myMon():
     cursor.close()
     return render_template("/myMon.html", info=info, size=size, msg=msg)
 
-
 @app.route("/release/<id>")
-def release(id):
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return redirback(url_for('root'))
+@login_required
+def release(token, id):
     cursor = Cursor(prepared=True)
     # also make sure that the user owns this pokemon (via part of the query)
     # will have to adjust userId number later
@@ -139,10 +183,8 @@ def release(id):
     return redirect(url_for('myMon',msg=msg), code=status.FOUND)
 
 @app.route("/rename/<id>")
-def rename(id):
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return redirback(url_for('root'))
+@login_required
+def rename(token, id):
     cursor = Cursor(prepared=True)
     tup = (id,)
     query = ("SELECT pokemonNo, speciesName, nickname, shiny FROM `owns` natural join `pokemon` "
@@ -160,10 +202,8 @@ def rename(id):
     return render_template("/rename.html", id=id, info=info[0])
 
 @app.route("/rename/submit/<id>",methods=['GET','POST'])
-def rename_submit(id):
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return redirback(url_for('root'))
+@login_required
+def rename_submit(token, id):
     if request.method == 'POST':
         nickname = request.form['nickname']
         cursor = Cursor(prepared=True)
@@ -200,10 +240,8 @@ def rename_submit(id):
     return redirect(url_for('myMon',msg="bad url"), code=status.FOUND)
 
 @app.route("/pokedex")
-def dexMain_view():
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return redirback(url_for('root'))
+@login_required
+def dexMain_view(token):
     cursor = Cursor(prepared=True)
     query = ("SELECT pokemonNo, speciesName, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types ORDER By pokemonNo,typeName")
     cursor.execute(query)
@@ -233,10 +271,8 @@ def dexMain_view():
     return render_template("/dexmain.html", info=result)
 
 @app.route("/dex/<id>")
-def dex_view(id):
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return redirback(url_for('root'))
+@login_required
+def dex_view(token, id):
     cursor = Cursor(prepared=True)
     # at most one match
     query = ("SELECT speciesName, pokemonNo, height, weight, typeName, slot from pokemon NATURAL JOIN hasType NATURAL JOIN types Where pokemonNo=%s ORDER By pokemonNo")
@@ -558,14 +594,11 @@ def last_catch_expire(uid,expiration_duration):
     time_left=last_encounter_time+expiration_duration-datetime.datetime.utcnow()
     return time_left
 
-
 @app.route("/catch",methods=['GET','POST'])
-def catch():
-    token = authenticate(request.cookies.get('access_token'))
+@login_required
+def catch(token):
     shiny_rate=1/8192
     last_encounter_delta= datetime.timedelta(minutes=1)
-    if token is None:
-        return redirback(url_for('root'))
     uid=token["userid"]
     def get_shiny_chance():
         return int(numpy.random.ranf()<shiny_rate)
@@ -648,10 +681,8 @@ def catch():
             return redirect(url_for('catch',msg="The Pokemon broke free!",method="GET"), code=status.SEE_OTHER)
 
 @app.route("/trade", methods=["POST"])
-def create_trade():
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
+@login_required
+def create_trade(token):
     # Create random resource id until we find one that isn't in the table.
     l = []
     try:
@@ -688,25 +719,17 @@ def tempfor(cursor, rscID):
     return data
 
 @app.route("/trade/<rscID>", methods=["GET","POST"])
-def trade(rscID):
+@login_required
+def trade(token, rscID):
     # Check DB to see if unexpired rscID exists
     s = request.headers.get("Content-Type")
     if s == "application/json;charset=UTF-8":
-        return tradeDaemon(rscID)
-    return tradeView(rscID)
-
-def tradeView(rscID):
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return redirback(url_for('root'))
+        return tradeDaemon(token, rscID)
     return render_template("trade.html")
 
 valid_stageID = re.compile(r"^$|^\d+$")
 
-def tradeDaemon(rscID):
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
+def tradeDaemon(token, rscID):
     body = request.get_json()
     try:
         rtype = body['type']
@@ -895,13 +918,11 @@ def root():
         except:
             pass
         return clearref(redirect(to, code=status.FOUND))
-    return render_template("auth.html")
+    return updateToken(token, make_response(render_template("auth.html")))
 
 @app.route("/train/submit/<id>", methods=['POST'])
-def trained(id):
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
+@login_required
+def trained(token, id):
     uid = token['userid']
     msg=""
     clickreq = request.get_json()
@@ -950,14 +971,10 @@ def trained(id):
     #return render_template("/train.html", info=result, msg=msg)
     return make_response(jsonify(info=result,msg=msg), status.OK)
 
-
-
 @app.route("/train/<id>", methods=['GET', 'POST'])
-def train(id):
+@login_required
+def train(token, id):
     msg = request.args.get('msg', None)
-    token = authenticate(request.cookies.get('access_token'))
-    if token is None:
-        return redirback(url_for('root'))
     uid = token['userid']
     cursor = Cursor(prepared=True)
     query = ("SELECT pokemonNo, speciesName, level, gender, nickname, shiny, exp FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId=%s AND userId=%s")
