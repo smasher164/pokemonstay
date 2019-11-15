@@ -90,6 +90,9 @@
         let timer = setInterval(submit, 120000)
 
         function submit(e){
+            // Reset timer when we click submit.
+            clearInterval(timer)
+            timer = setInterval(submit, 120000)
             if(counter == 0){
                 return        
             }
@@ -106,9 +109,6 @@
                     message.textContent = ev.target.response.msg
                     curexp = (ev.target.response.info[0].exp/(ev.target.response.info[0].exp + ev.target.response.info[0].expNeeded))*100
                     progressUpdate(curexp)
-                    // Reset timer when we receive a response.
-                    clearInterval(timer)
-                    timer = setInterval(submit, 120000)
                 }
             })
             let url = new URL(document.URL)
