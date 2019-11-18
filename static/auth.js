@@ -108,6 +108,22 @@ document.querySelector("#in-uname").addEventListener('input', e => {
         e.target.title = tooltip.trim()
     }
 })
+
+let elemVerify = document.querySelector("#in-verify")
+let checkVerify = elem => {
+    if (isRegister) {
+        if (elem.value != document.querySelector("#in-pass").value) {
+            elem.nextElementSibling.classList = ["btn btn-danger validation-bad"]
+            elem.title = `Password does not match`
+            enabletip(elem.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>`+defaultMessages["in-verify"]+`</span>`})
+        } else {
+            elem.nextElementSibling.classList = ["btn btn-success validation-good"]
+            elem.title = ``
+            disabletip(elem.nextElementSibling)
+        }
+    }
+}
+
 document.querySelector("#in-pass").addEventListener('input', e => {
     if (isRegister) {
         let tooltip = ``
@@ -134,21 +150,11 @@ document.querySelector("#in-pass").addEventListener('input', e => {
             disabletip(e.target.nextElementSibling)
         }
         e.target.title = tooltip.trim()
+        checkVerify(elemVerify)
     }
 })
-document.querySelector("#in-verify").addEventListener('input', e => {
-    if (isRegister) {
-        if (e.target.value != document.querySelector("#in-pass").value) {
-            e.target.nextElementSibling.classList = ["btn btn-danger validation-bad"]
-            e.target.title = `Password does not match`
-            enabletip(e.target.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>`+defaultMessages["in-verify"]+`</span>`})
-        } else {
-            e.target.nextElementSibling.classList = ["btn btn-success validation-good"]
-            e.target.title = ``
-            disabletip(e.target.nextElementSibling)
-        }
-    }
-})
+document.querySelector("#in-verify").addEventListener('input', e => checkVerify(e.target))
+
 document.querySelector("#toggle-signin").addEventListener('click', e => {
     document.querySelectorAll("input").forEach(input => {
         input.value = ""
@@ -174,8 +180,12 @@ document.querySelector("#toggle-register").addEventListener('click', e => {
     document.querySelectorAll("input").forEach(input => {
         input.value = ""
         input.title = ""
-        input.nextElementSibling.classList = ["btn btn-danger validation-bad"]
-        enabletip(input.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>${join(defaultMessages[input.id])}</span>`})
+        if (input.id == "in-verify") {
+            input.nextElementSibling.classList = ["btn btn-success validation-good"]
+        } else {
+            input.nextElementSibling.classList = ["btn btn-danger validation-bad"]
+            enabletip(input.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>${join(defaultMessages[input.id])}</span>`})
+        }
     })
     isRegister = true
     message.textContent = ""
