@@ -1,6 +1,6 @@
 h1 {
     text-align: center;
-    margin-top: 2rem;
+    margin-top: 7rem;
 }
 
 main {
@@ -145,7 +145,7 @@ main.text-center ul {
 footer {
     flex-shrink: 0;
     margin-top: 2rem;
-    padding: 2rem 0;
+    padding: 2rem;
     color: white;
 }
 
@@ -171,4 +171,8 @@ trade img {
 
 #pokemon1, #pokemon2 {
     white-space: pre-line;
+}
+
+figure img {
+    object-fit: contain;
 }
