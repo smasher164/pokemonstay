@@ -130,10 +130,6 @@ figure{
     display: inline-block;
 }
 
-main.text-center ul {
-    list-style-position: inside;
-}
-
 .inline-forms form {
     display: inline-block;
 }
