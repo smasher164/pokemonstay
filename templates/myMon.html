@@ -1,76 +1,84 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<title>My Mon</title>
-
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<link href="/static/main.css" rel="stylesheet">
-</head>
-<body>
-    {% include 'header.html' %}
-    {% include 'nav.html' %}
-    <h1>My Mon</h1>
-    <center>
-    <input type="text" id="search" onkeyup="filter()" placeholder="Search">
-    {% if msg %}
-    <p><font color="red">{{ msg }}</font></p>
-    {% endif %}
-    {% if size == 0 %}
-    <p>Sorry, you don't have any mon</p>
-    {% endif %}
-    {% if size != 0 %}
-    <table id="mymon" class="table" style="width:70%;">
-        <tr>
-          <th>Mon</th>
-          <th>Nickname</th>
-          <th>Level</th>
-          <th>Gender</th>
-          <th>Shiny</th>
-          <th>Met</th>
-          <th>Rename?</th>
-          <th>Release?</th>
-          <th>Train?</th>
-        </tr>
-        {% for item in info %}
-        <tr>
-            {% if item.pokemonNo < 10 %}
-            <td><img src="http://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png"/>&nbsp<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
-            {% elif item.pokemonNo < 100 %}
-            <td><img src="http://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"/>&nbsp<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
-            {% else %}
-            <td><img src="http://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"/>&nbsp<a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+        <meta name="Description" content="Box">
+        <title>Box</title>
+        <link href="/static/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/main.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="content">
+            {% include 'nav.html' %}
+            <h1>Box</h1>
+            <main>
+                <input type="text" class="form-control" id="search" onkeyup="filter()" placeholder="Search">
+                {% if msg %}
+                <p><font color="red">{{ msg }}</font></p>
+                {% endif %}
+                {% if size == 0 %}
+                <p>Sorry, you don't have any mon</p>
+                {% endif %}
+                {% if size != 0 %}
+                <div class="table-responsive">
+                    <table id="mymon" class="table">
+                        <thead class="thead-light">
+                            <tr>
+                              <th>Name</th>
+                              <th>Nickname</th>
+                              <th>Level</th>
+                              <th>Gender</th>
+                              <th>Shiny</th>
+                              <th>Met</th>
+                              <th>Rename?</th>
+                              <th>Release?</th>
+                              <th>Train?</th>
+                            </tr>
+                        </thead>
+                        {% for item in info %}
+                        <tr>
+                            {% if item.pokemonNo < 10 %}
+                            <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                            {% elif item.pokemonNo < 100 %}
+                            <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                            {% else %}
+                            <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                            {% endif %}
+                            <td>{% if item.nickname %}
+                                {{ item.nickname }}
+                            {% endif %}</td>
+                            <td>{{ item.level }}</td>
+                            <td>{% if item.gender == 0 %}
+                                genderless
+                                {% endif %}
+                                {% if item.gender == 1 %}
+                                female
+                                {% endif %}
+                                {% if item.gender == 2 %}
+                                male
+                                {% endif %}
+                            </td>
+                            <td> {% if item.shiny == 0 %}
+                                not shiny
+                                {% endif %}
+                                {% if item.shiny == 1 %}
+                                shiny
+                                {% endif %}</td>
+                            <td>{{ item.met }}</td>
+                            <td><a href="/rename/{{ item.ownsId }}">Rename Mon</a></td>
+                            <td><button class="btn btn-danger"><a href="/release/{{ item.ownsId }}" style="color: white;">Release Mon</a></button></td>
+                            <td><a href="/train/{{ item.ownsId }}">Train Mon</a></td>
+                        </tr>
+                    
+                        {% endfor %}
+                    </table>
+                </div>
+            </main>
             {% endif %}
-            <td>{% if item.nickname %}
-                {{ item.nickname }}
-            {% endif %}</td>
-            <td>{{ item.level }}</td>
-            <td>{% if item.gender == 0 %}
-                genderless
-                {% endif %}
-                {% if item.gender == 1 %}
-                female
-                {% endif %}
-                {% if item.gender == 2 %}
-                male
-                {% endif %}
-            </td>
-            <td> {% if item.shiny == 0 %}
-                not shiny
-                {% endif %}
-                {% if item.shiny == 1 %}
-                shiny
-                {% endif %}</td>
-            <td>{{ item.met }}</td>
-            <td><a href="/rename/{{ item.ownsId }}">Rename Mon</a></td>
-            <td><button class="btn btn-danger"><a href="/release/{{ item.ownsId }}" style="color: white;">Release Mon</a></button></td>
-            <td><a href="/train/{{ item.ownsId }}">Train Mon</a></td>
-        </tr>
-   
-        {% endfor %}
-    </table>
-</center>
-    {% endif %}
-    <script>
+        </div>
+        {% include 'footer.html' %}
+        <script>
             function filter(){
               var input, filter, table, tr, td, i, txtValue;
               input = document.getElementById("search");
@@ -97,6 +105,6 @@
                 }
               }
             }
-          </script>
-</body>
+        </script>
+    </body>
 </html>

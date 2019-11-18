@@ -38,12 +38,15 @@ app = Flask(
 
 class Cursor():
     def __init__(self, *args, **kwargs):
-        self.conn = db.connect(
-            host=env("DB_HOST"),
-            user=env("DB_USERNAME"),
-            password=env("DB_PASSWORD"),
-            database=env("DB_NAME"),
-        )
+        try:
+            self.conn = db.connect(
+                host=env("DB_HOST"),
+                user=env("DB_USERNAME"),
+                password=env("DB_PASSWORD"),
+                database=env("DB_NAME"),
+            )
+        except Exception as err:
+            print(err)
         self.cursor = self.conn.cursor(*args, **kwargs)
     def __getattr__(self, name):
         if name == "close":
@@ -372,10 +375,9 @@ def dex_view(token, id):
 
     item['to'] = evolvesTo
     item['toLen'] = len(evolvesTo)
-    result.append(item) 
     cursor.close()
     
-    return render_template("/dex.html", info=result)
+    return render_template("/dex.html", item=item)
 
 # Pre-compile password validation regexes
 valid_password = [
@@ -927,8 +929,42 @@ def tradeDaemon(token, rscID):
             if data is None:
                 return make_response(jsonify({'err': 'Invalid resource'}), status.NOT_FOUND)
             data["userid"] = token["userid"]
-            cursor.close()
+
+            data["userName1"] = None
+            data["userName2"] = None
+
+            cursor.execute("SELECT userName FROM Trainer WHERE userid = %s", (data["user1Id"],))
+            row = cursor.fetchone()
+            if row != None:
+                (data["userName1"],) = row
+
+            cursor.execute("SELECT userName FROM Trainer WHERE userid = %s", (data["user2Id"],))
+            row = cursor.fetchone()
+            if row != None:
+                (data["userName2"],) = row
             
+            p1 = {'ownsId': data["pokemon1"], 'number':None, 'species':None, 'nickname':None, 'level':None, 'gender':None, 'shiny':None}
+            p2 = {'ownsId': data["pokemon2"], 'number':None, 'species':None, 'nickname':None, 'level':None, 'gender':None, 'shiny':None}
+
+            if p1["ownsId"] != None:
+                cursor.execute("SELECT pokemonNo, speciesName, nickname, level, gender, shiny FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId = %s", (p1["ownsId"],))
+                row = cursor.fetchone()
+                if row != None:
+                    p1["number"], p1["species"], p1["nickname"], p1["level"], p1["gender"], p1["shiny"] = row
+                    p1["species"] = p1["species"].capitalize()
+
+            if p2["ownsId"] != None:
+                cursor.execute("SELECT pokemonNo, speciesName, nickname, level, gender, shiny FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId = %s", (p2["ownsId"],))
+                row = cursor.fetchone()
+                if row != None:
+                    p2["number"], p2["species"], p2["nickname"], p2["level"], p2["gender"], p2["shiny"] = row
+                    p2["species"] = p2["species"].capitalize()
+
+            data["pokemon1"] = p1
+            data["pokemon2"] = p2
+            
+            cursor.close()
+
             res = make_response(jsonify(data), status.OK)
         except Exception as err:
             print("tradePoll", err)

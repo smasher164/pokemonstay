@@ -1,42 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<title>Rename</title>
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<link href="/static/main.css" rel="stylesheet">
-</head>
-<body>
-    {% include 'header.html' %}
-    {% include 'nav.html' %}
-    {% if info.nickname %}
-    <h1>Rename Mon {{ info.nickname }}</h1>
-    {% else %}
-    <h1>Rename Mon {{ info.speciesName }}</h1>
-    {% endif %}
-    <center>
-        {% if info.pokemonNo < 10 %}
-        {% if info.shiny == 0 %}
-            <img src="https://www.serebii.net/sunmoon/pokemon/00{{info.pokemonNo}}.png" width=200 height=200>
-        {% else %}
-            <img src="https://www.serebii.net/Shiny/SM/00{{info.pokemonNo}}.png" width=200 height=200>
-        {% endif %}
-        {% elif info.pokemonNo < 100 %}
-        {% if info.shiny == 0 %}
-            <img src="https://www.serebii.net/sunmoon/pokemon/0{{info.pokemonNo}}.png" width=200 height=200>
-        {% else %}
-            <img src="https://www.serebii.net/Shiny/SM/0{{info.pokemonNo}}.png" width=200 height=200>
-        {% endif %}
-        {% else %}
-        {% if info.shiny == 0 %}     
-                <img src="https://www.serebii.net/sunmoon/pokemon/{{info.pokemonNo}}.png" width=200 height=200>
-        {% else %}
-                <img src="https://www.serebii.net/Shiny/SM/{{info.pokemonNo}}.png" width=200 height=200>
-        {% endif %}
-        {% endif %} 
-    <form action="/rename/submit/{{ id }}" method="POST">
-        New Nickname: <input type="text" name="nickname" maxlength="20"><br/> <br/>
-        <input class = "btn btn-primary" type="submit" value="Submit">
-      </form>
-    </center>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+        <meta name="Description" content="Rename">
+        <title>Rename</title>
+        <link href="/static/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/main.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="content">
+            {% include 'nav.html' %}
+            {% if info.nickname %}
+            <h1>Rename {{ info.nickname }}</h1>
+            {% else %}
+            <h1>Rename {{ info.speciesName }}</h1>
+            {% endif %}
+            <main class="text-center">
+                {% if info.pokemonNo < 10 %}
+                {% if info.shiny == 0 %}
+                    <img src="https://www.serebii.net/sunmoon/pokemon/00{{info.pokemonNo}}.png" width=200 height=200>
+                {% else %}
+                    <img src="https://www.serebii.net/Shiny/SM/00{{info.pokemonNo}}.png" width=200 height=200>
+                {% endif %}
+                {% elif info.pokemonNo < 100 %}
+                {% if info.shiny == 0 %}
+                    <img src="https://www.serebii.net/sunmoon/pokemon/0{{info.pokemonNo}}.png" width=200 height=200>
+                {% else %}
+                    <img src="https://www.serebii.net/Shiny/SM/0{{info.pokemonNo}}.png" width=200 height=200>
+                {% endif %}
+                {% else %}
+                {% if info.shiny == 0 %}     
+                        <img src="https://www.serebii.net/sunmoon/pokemon/{{info.pokemonNo}}.png" width=200 height=200>
+                {% else %}
+                        <img src="https://www.serebii.net/Shiny/SM/{{info.pokemonNo}}.png" width=200 height=200>
+                {% endif %}
+                {% endif %} 
+                <form action="/rename/submit/{{ id }}" method="POST">
+                    <label>New Nickname:</label>
+                    <input type="text" class="form-control" name="nickname" maxlength="20">
+                    <input class="btn btn-primary" type="submit" value="Submit">
+                </form>
+            </main>
+        </div>
+        {% include 'footer.html' %}
+    </body>
 </html>

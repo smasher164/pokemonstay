@@ -5,62 +5,65 @@
         <meta name="viewport" content="width=device-width, minimum-scale=1.0">
         <meta name="Description" content="Catch a Pokemon!">
         <title>Pokémon Stay | Catch a Pokémon!</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link href="/static/bootstrap.min.css" rel="stylesheet">
         <link href="/static/main.css" rel="stylesheet">
     </head>
     <body>
-        {% include 'header.html' %}
-        {% include 'nav.html' %}
-        <center>
-        {% if msg %}
-        <p><font color="red">{{ msg }}</font></p>
-        {% endif %}
-        <p>
-            Time until next catch: {{wait_time}}
-        </p>
-        {% if mon_name %}
-        {% if mon_no < 10 %}
-        {% if mon_shiny == 0 %}
-            <img src="https://www.serebii.net/sunmoon/pokemon/00{{mon_no}}.png" width=200 height=200>
-        {% else %}
-            <img src="https://www.serebii.net/Shiny/SM/00{{mon_no}}.png" width=200 height=200>
-        {% endif %}
-        {% elif mon_no < 100 %}
-        {% if mon_shiny == 0 %}
-            <img src="https://www.serebii.net/sunmoon/pokemon/0{{mon_no}}.png" width=200 height=200>
-        {% else %}
-            <img src="https://www.serebii.net/Shiny/SM/0{{mon_no}}.png" width=200 height=200>
-        {% endif %}
-        {% else %}
-        {% if mon_shiny == 0 %}     
-                <img src="https://www.serebii.net/sunmoon/pokemon/{{mon_no}}.png" width=200 height=200>
-        {% else %}
-                <img src="https://www.serebii.net/Shiny/SM/{{mon_no}}.png" width=200 height=200>
-            {% endif %}
-        {% endif %}
-        {% if mon_gender == 0 %}
-        <p>
-            You encountered a level {{mon_lvl}} {{mon_name}}! They are genderless.
-        </p>
-        {% elif mon_gender == 1 %}
-        <p>
-            You encountered a level {{mon_lvl}} {{mon_name}}! They are female.
-        </p>
-        {% else %}
-        <p>
-            You encountered a level {{mon_lvl}} {{mon_name}}! They are male.
-        </p>
-        {% endif %}
-        <div class="btn-inline">
-        <form method="post">
-            <button class="btn btn-primary">Catch</button> &nbsp; &nbsp;
-            <input type="hidden" name="catch" value="True">
-        </form>
-        <form method="post">
-            <button class="btn btn-primary">Run</button>
-        </form>
-    </div>
-    </center>
-        {% endif %}
+        <div class="content">
+            {% include 'nav.html' %}
+            <h1>{{mon_name}}</h1>
+            <main class="text-center">
+                {% if msg %}
+                    <p><font color="red">{{ msg }}</font></p>
+                {% endif %}
+                <p>
+                    Time until next catch: {{wait_time}}
+                </p>
+                {% if mon_name %}
+                    {% if mon_no < 10 %}
+                        {% if mon_shiny == 0 %}
+                            <img src="https://www.serebii.net/sunmoon/pokemon/00{{mon_no}}.png" width=200 height=200>
+                        {% else %}
+                            <img src="https://www.serebii.net/Shiny/SM/00{{mon_no}}.png" width=200 height=200>
+                        {% endif %}
+                    {% elif mon_no < 100 %}
+                        {% if mon_shiny == 0 %}
+                            <img src="https://www.serebii.net/sunmoon/pokemon/0{{mon_no}}.png" width=200 height=200>
+                        {% else %}
+                            <img src="https://www.serebii.net/Shiny/SM/0{{mon_no}}.png" width=200 height=200>
+                        {% endif %}
+                    {% else %}
+                        {% if mon_shiny == 0 %}     
+                            <img src="https://www.serebii.net/sunmoon/pokemon/{{mon_no}}.png" width=200 height=200>
+                        {% else %}
+                            <img src="https://www.serebii.net/Shiny/SM/{{mon_no}}.png" width=200 height=200>
+                        {% endif %}
+                    {% endif %}
+                    {% if mon_gender == 0 %}
+                        <p>
+                            You encountered a level {{mon_lvl}} {{mon_name}}! They are genderless.
+                        </p>
+                    {% elif mon_gender == 1 %}
+                        <p>
+                            You encountered a level {{mon_lvl}} {{mon_name}}! They are female.
+                        </p>
+                    {% else %}
+                        <p>
+                            You encountered a level {{mon_lvl}} {{mon_name}}! They are male.
+                        </p>
+                    {% endif %}
+                    <div class="inline-forms">
+                        <form method="post">
+                            <button class="btn btn-primary">Catch</button>
+                            <input type="hidden" name="catch" value="True">
+                        </form>
+                        <form method="post">
+                            <button class="btn btn-primary">Run</button>
+                        </form>
+                    </div>
+                {% endif %}
+            </main>
+        </div>
+        {% include 'footer.html' %}
     </body>
 </html>

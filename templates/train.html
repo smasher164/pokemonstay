@@ -5,71 +5,65 @@
         <meta name="viewport" content="width=device-width, minimum-scale=1.0">
         <meta name="Description" content="Train your Pokemon">
         <title>Pokémon Stay | Train your Pokémon</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link href="/static/bootstrap.min.css" rel="stylesheet">
         <link href="/static/main.css" rel="stylesheet">
     </head>
-
     <body>
-        {% include 'header.html' %}
-        {% include 'nav.html' %}
-        <h1>Train your Pokémon</h1>
-        <center>
-        
-        <p id="message" style="color: red;">{% if msg %}{{ msg }}{% endif %}</p>
-        
-        {% if info %}
-        {% if info[0].pokemonNo < 10 %}
-        {% if info[0].shiny == 0 %}
-            <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/00{{info[0].pokemonNo}}.png" width=200 height=200>
-        {% else %}
-            <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/00{{info[0].pokemonNo}}.png" width=200 height=200>
-        {% endif %}
-        {% elif info[0].pokemonNo < 100 %}
-        {% if info[0].shiny == 0 %}
-            <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/0{{info[0].pokemonNo}}.png" width=200 height=200>
-        {% else %}
-            <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/0{{info[0].pokemonNo}}.png" width=200 height=200>
-        {% endif %}
-        {% else %}
-        {% if info[0].shiny == 0 %}     
-                <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/{{info[0].pokemonNo}}.png" width=200 height=200>
-        {% else %}
-                <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/{{info[0].pokemonNo}}.png" width=200 height=200>
-            {% endif %}
-        {% endif %}
-        <div class="progress w-50">
-            <div id="progressbar" class="progress-bar progress-bar-striped " role="progressbar"></div>
-            <div id="progressbar-remaining" class="progress-bar progress-bar-striped " style="background-color: lightgray;" role="progressbar"></div>
+        <div class="content">
+            {% include 'nav.html' %}
+            <h1>Train your Pokémon</h1>
+            <main class="text-center">
+                <p id="message" style="color: red;">{% if msg %}{{ msg }}{% endif %}</p>
+                {% if info %}
+                    {% if info[0].pokemonNo < 10 %}
+                        {% if info[0].shiny == 0 %}
+                            <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/00{{info[0].pokemonNo}}.png" width=200 height=200>
+                        {% else %}
+                            <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/00{{info[0].pokemonNo}}.png" width=200 height=200>
+                        {% endif %}
+                    {% elif info[0].pokemonNo < 100 %}
+                        {% if info[0].shiny == 0 %}
+                            <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/0{{info[0].pokemonNo}}.png" width=200 height=200>
+                        {% else %}
+                            <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/0{{info[0].pokemonNo}}.png" width=200 height=200>
+                        {% endif %}
+                    {% else %}
+                        {% if info[0].shiny == 0 %}     
+                            <img id="pkmimg" src="https://www.serebii.net/sunmoon/pokemon/{{info[0].pokemonNo}}.png" width=200 height=200>
+                        {% else %}
+                            <img id="pkmimg" src="https://www.serebii.net/Shiny/SM/{{info[0].pokemonNo}}.png" width=200 height=200>
+                        {% endif %}
+                    {% endif %}
+                    <div class="progress">
+                        <div id="progressbar" class="progress-bar progress-bar-striped " role="progressbar"></div>
+                        <div id="progressbar-remaining" class="progress-bar progress-bar-striped " style="background-color: lightgray;" role="progressbar"></div>
+                    </div>
+                    <p id="training-text">
+                        {% if info[0].nickname %}
+                            You're training {{ info[0].nickname }} the {{ info[0].speciesName }}.
+                        {% else %}
+                            You're training your {{ info[0].speciesName }}.
+                        {% endif %} 
+                        {% if info[0].gender == 0 %} They are {% endif %}
+                        {% if info[0].gender == 1 %} She is {% endif %}
+                        {% if info[0].gender == 2 %} He is {% endif %}
+                        {% if info[0].level == 100 %}
+                            currently level {{ info[0].level }}.
+                        {% else %}
+                            currently level {{ info[0].level }} and needs {{ info[0].expNeeded }} experience points to level up.   
+                        {% endif %}  
+                    </p>
+                    <input name="owns_id" id="ownid" type="hidden" value="{{info[0].id}}"/>
+                {% endif %}
+                <p id="clicknumber">You have clicked 0 times</p>
+                <div>
+                    <button class="btn btn-primary" id="train-Train">Train</button>
+                    <input id="clicks" name="clicks" type="hidden" value="0"/>
+                    <button class="btn btn-primary"id="train-Submit">Submit</button>
+                </div>
+            </main>
         </div>
-        <p id="training-text">
-            {% if info[0].nickname %}
-            You're training {{ info[0].nickname }} the {{ info[0].speciesName }}.
-            {% else %}
-            You're training your {{ info[0].speciesName }}.
-            {% endif %} 
-            {% if info[0].gender == 0 %} They are {% endif %}
-            {% if info[0].gender == 1 %} She is {% endif %}
-            {% if info[0].gender == 2 %} He is {% endif %}
-            {% if info[0].level == 100 %}
-            currently level {{ info[0].level }}.
-            {% else %}
-            currently level {{ info[0].level }} and needs {{ info[0].expNeeded }} experience points to level up.   
-            {% endif %}  
-                   
-        </p>
-        <input name="owns_id" id="ownid" type="hidden" value="{{info[0].id}}"/>
-        {% endif %}
-        
-        <p id="clicknumber">You have clicked 0 times</p>
-        
-        <div class="btn-inline">
-        <button class="btn btn-primary" id="train-Train">Train</button> &nbsp; &nbsp;
-    
-        <input id="clicks" name="clicks" type="hidden" value="0"/>
-        <button class="btn btn-primary"id="train-Submit">Submit</button>
-        
-        </div>
-        </center>
+        {% include 'footer.html' %}
     </body>
 
     <script type="text/javascript" src="/static/fastclick.min.js"></script>

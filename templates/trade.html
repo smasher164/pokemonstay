@@ -1,26 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<title>Trade</title>
-<link href="/static/main.css" rel="stylesheet">
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-</head>
-<body>
-    {% include 'header.html' %}
-    {% include 'nav.html' %}
-    <h1>Trade</h1>
-    <button id="btn-join">Join</button>
-    <button id="btn-leave">Leave</button>
-    <div id="user1">User ID 1:</div>
-    <div id="user2">User ID 2:</div>
-    <div id="pokemon1">Pokémon ID 1:</div>
-    <div id="pokemon2">Pokémon ID 2:</div>
-    <label for="select-box">Choose a Pokémon:</label>
-    <select id="select-box" disabled></select>
-    <button id="btn-confirm">Confirm</button>
-    <button id="btn-cancel">Cancel</button>
-    <div id="confirm1">Confirm 1:</div>
-    <div id="confirm2">Confirm 2:</div>
-    <script type="text/javascript" src="/static/trade.js"></script>
-</body>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+        <meta name="Description" content="Trade">
+        <title>Trade</title>
+        <link href="/static/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/main.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="content">
+            {% include 'nav.html' %}
+            <h1>Trade</h1>
+            <main>
+                <trade>
+                    <button class="btn btn-primary" id="btn-join">Join</button>
+                    <button class="btn btn-primary btn-danger" id="btn-leave">Leave</button>
+                    <div id="user1">Waiting for User 1...</div>
+                    <div id="user2">Waiting for User 2...</div>
+                    <div id="pokemon1">No offer</div>
+                    <div id="pokemon2">No offer</div>
+                    <img id="tradeimg1" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8KZf8HwAFzQJrLX7vMQAAAABJRU5ErkJggg==">
+                    <img id="tradeimg2" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk2HPlPwAE5QKRuXBlewAAAABJRU5ErkJggg==">
+                    <label for="select-box">Choose a Pokémon:</label>
+                    <select id="select-box" disabled></select>
+                    <button class="btn btn-primary" id="btn-confirm">Confirm</button>
+                    <button class="btn btn-primary" id="btn-cancel">Cancel</button>
+                    <div id="confirm1">Not confirmed</div>
+                    <div id="confirm2">Not confirmed</div>
+                </trade>
+            </main>
+        </div>
+        {% include 'footer.html' %}
+        <script type="text/javascript" src="/static/trade.js"></script>
+    </body>
 </html>

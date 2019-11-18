@@ -8,7 +8,7 @@ let validPassword = [
     /[\d]/,
     /[ !"#$%&'()*+,-./:;<=>?@[\\\]^_`{|}~]/,
 ]
-let validateEmail = (target) => !target.validity.typeMismatch
+let validateEmail = (target) => target.value.length != 0 && !target.validity.typeMismatch
 let validateUsername = (target) => {
     if (!isRegister) return true
     return validUserName.test(target.value)
@@ -32,6 +32,21 @@ let validateAll = () =>
     validatePassword(document.querySelector("#in-pass")) &&
     validateVerify(document.querySelector("#in-verify"))
 
+let defaultMessages = {
+    "in-email": "Invalid email",
+    "in-uname": [`Must be between 8 and 128 characters`,"\n\nUsername must only have a-z, A-Z, 0-9, '.', '-', or '_'"],
+    "in-pass": [`Must be between 8 and 128 characters`,
+        "\n\n" + `Password must only have a-z, A-Z, 0-9, ' ', '!', '"', '#', '$', '%', '&', ''', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\', ']', '^', '_', '\`', '{', '|', '}', or '~'`,
+        "\n\n" + `Password must contain at least one a-z or A-Z`,
+        "\n\n" + `Password must contain at least one 0-9`,
+        "\n\n" + `Password must contain at least one ' ', '!', '"', '#', '$', '%', '&', ''', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\', ']', '^', '_', '\`', '{', '|', '}', or '~'`],
+    "in-verify":`Password does not match`,
+}
+
+tippy.setDefaultProps({
+    theme: 'light-border',
+})
+
 document.querySelectorAll("input").forEach(input =>
     input.addEventListener("keyup", e => {
         // On Enter Key
@@ -41,28 +56,54 @@ document.querySelectorAll("input").forEach(input =>
         }
     })
 )
+
+document.querySelectorAll("custom-input > button").forEach(btn => btn.tabIndex = -1)
+
+enabletip = (e,v) => {
+    if (e._tippy) {
+        e._tippy.enable()
+        e._tippy.setProps(v)
+    }
+    tippy(e,v)
+}
+
+disabletip = e => {
+    if (e._tippy) {
+        e._tippy.disable()
+    }
+}
+
+let join = v => {
+    if (typeof v == "string") return v
+    return v.join("")
+}
+
 document.querySelector("#in-email").addEventListener('input', e => {
     if (validateEmail(e.target)) {
-        e.target.classList.remove("invalid-input")
         e.target.title = ``
+        e.target.nextElementSibling.classList = ["btn btn-success validation-good"]
+        disabletip(e.target.nextElementSibling)
     } else {
-        e.target.classList.add("invalid-input")
         e.target.title = `Invalid email`
+        e.target.nextElementSibling.classList = ["btn btn-danger validation-bad"]
+        enabletip(e.target.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>${defaultMessages["in-email"]}</span>`})
     }
 })
 document.querySelector("#in-uname").addEventListener('input', e => {
     if (isRegister) {
         let tooltip = ``
         if (e.target.value.length < 8 || e.target.value.length > 128) {
-            tooltip = `Must be between 8 and 128 characters`
+            tooltip += defaultMessages["in-uname"][0]
         }
         if (!validUserName.test(e.target.value)) {
-            tooltip += "\n\nUsername must only have a-z, A-Z, 0-9, '.', '-', or '_'"
+            tooltip += defaultMessages["in-uname"][1]
         }
         if (tooltip.length != 0) {
-            e.target.classList.add("invalid-input")
+            e.target.nextElementSibling.classList = ["btn btn-danger validation-bad"]
+            enabletip(e.target.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>${tooltip.trim()}</span>`})
         } else {
-            e.target.classList.remove("invalid-input")
+            e.target.nextElementSibling.classList= ["btn btn-success validation-good"]
+            disabletip(e.target.nextElementSibling)
         }
         e.target.title = tooltip.trim()
     }
@@ -71,24 +112,26 @@ document.querySelector("#in-pass").addEventListener('input', e => {
     if (isRegister) {
         let tooltip = ``
         if (e.target.value.length < 8 || e.target.value.length > 128) {
-            tooltip = `Must be between 8 and 128 characters`
+            tooltip = defaultMessages["in-pass"][0]
         }
         if (!validPassword[0].test(e.target.value)) {
-            tooltip += "\n\n" + `Password must only have a-z, A-Z, 0-9, ' ', '!', '"', '#', '$', '%', '&', ''', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\', ']', '^', '_', '\`', '{', '|', '}', or '~'`
+            tooltip += defaultMessages["in-pass"][1]
         }
         if (!validPassword[1].test(e.target.value)) {
-            tooltip += "\n\n" + `Password must contain at least one a-z or A-Z`
+            tooltip += defaultMessages["in-pass"][2]
         }
         if (!validPassword[2].test(e.target.value)) {
-            tooltip += "\n\n" + `Password must contain at least one 0-9`
+            tooltip += defaultMessages["in-pass"][3]
         }
         if (!validPassword[3].test(e.target.value)) {
-            tooltip += "\n\n" + `Password must contain at least one ' ', '!', '"', '#', '$', '%', '&', ''', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\', ']', '^', '_', '\`', '{', '|', '}', or '~'`
+            tooltip += defaultMessages["in-pass"][4]
         }
         if (tooltip.length != 0) {
-            e.target.classList.add("invalid-input")
+            e.target.nextElementSibling.classList ["btn btn-danger validation-bad"]
+            enabletip(e.target.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>`+tooltip.trim()+`</span>`})
         } else {
-            e.target.classList.remove("invalid-input")
+            e.target.nextElementSibling.classList = ["btn btn-success validation-good"]
+            disabletip(e.target.nextElementSibling)
         }
         e.target.title = tooltip.trim()
     }
@@ -96,11 +139,13 @@ document.querySelector("#in-pass").addEventListener('input', e => {
 document.querySelector("#in-verify").addEventListener('input', e => {
     if (isRegister) {
         if (e.target.value != document.querySelector("#in-pass").value) {
-            e.target.classList.add("invalid-input")
+            e.target.nextElementSibling.classList = ["btn btn-danger validation-bad"]
             e.target.title = `Password does not match`
+            enabletip(e.target.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>`+defaultMessages["in-verify"]+`</span>`})
         } else {
-            e.target.classList.remove("invalid-input")
+            e.target.nextElementSibling.classList = ["btn btn-success validation-good"]
             e.target.title = ``
+            disabletip(e.target.nextElementSibling)
         }
     }
 })
@@ -108,7 +153,12 @@ document.querySelector("#toggle-signin").addEventListener('click', e => {
     document.querySelectorAll("input").forEach(input => {
         input.value = ""
         input.title = ""
-        input.classList.remove("invalid-input")
+        if(input.id == "in-email") {
+            input.nextElementSibling.classList = ["btn btn-danger validation-bad"]
+            enabletip(input.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>${defaultMessages["in-email"]}</span>`})
+        } else {
+            input.nextElementSibling.classList = []
+        }
     })
     isRegister = false
     message.textContent = ""
@@ -117,11 +167,15 @@ document.querySelector("#toggle-signin").addEventListener('click', e => {
         if (!disp.classList.contains("hide-register"))
             disp.classList.add("hide-register")
 })
+// Generate click event to initialize page to signin
+document.querySelector("#toggle-signin").click()
+
 document.querySelector("#toggle-register").addEventListener('click', e => {
     document.querySelectorAll("input").forEach(input => {
         input.value = ""
         input.title = ""
-        input.classList.remove("invalid-input")
+        input.nextElementSibling.classList = ["btn btn-danger validation-bad"]
+        enabletip(input.nextElementSibling, {content: `<span style='white-space: pre-wrap;'>${join(defaultMessages[input.id])}</span>`})
     })
     isRegister = true
     message.textContent = ""
@@ -143,6 +197,7 @@ let submitRegister = e => {
     let verify = document.querySelector("#in-verify").value
     if (!validateAll()) {
         message.textContent = "Please correct form fields before submitting."
+        document.querySelectorAll(".validation-bad").forEach(e => e._tippy.show())
         return
     }
     var req = new XMLHttpRequest()
@@ -164,6 +219,7 @@ let submitSignIn = e => {
     let pass = document.querySelector("#in-pass").value
     if (!validateAll()) {
         message.textContent = "Please correct form fields before submitting."
+        document.querySelectorAll(".validation-bad").forEach(e => e._tippy.show())
         return
     }
     var req = new XMLHttpRequest()

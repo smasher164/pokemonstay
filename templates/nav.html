@@ -1,20 +1,28 @@
-<nav>
-    <button id="nav-logout" class="nav-link float-right btn btn-primary">Logout</button>  
-    <button id="nav-trade" class="nav-link float-right btn btn-primary">Trade</button>              
-    <button id="nav-dex" class="nav-link float-right btn btn-primary">Pokédex</button>
-    <button id="nav-catch" class="nav-link float-right btn btn-primary">Catch</button>
-    <button id="nav-box" class="nav-link float-right btn btn-primary">Box</button>
-    
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-primary">
+    <a class="navbar-brand" href="/">
+        <img src="/static/logo.png" alt="Home" style="height: 4rem;">
+    </a>
+    <button class="navbar-toggler" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse justify-content-end" id="navbarNavAltMarkup">
+        <button id="nav-catch" class="nav-item nav-link btn btn-primary">Catch</button>
+        <button id="nav-box" class="nav-item nav-link btn btn-primary">Box</button>
+        <button id="nav-dex" class="nav-item nav-link btn btn-primary">Pokédex</button>
+        <button id="nav-trade" class="nav-item nav-link btn btn-primary">Trade</button>
+        <button id="nav-logout" class="nav-item nav-link btn btn-primary">Logout</button>  
+    </div>
+
     <script type="text/javascript">
-        document.querySelector("#nav-box").addEventListener('click', e => window.location.replace('/myMon'))
-        document.querySelector("#nav-dex").addEventListener('click', e => window.location.replace('/pokedex'))
-        document.querySelector("#nav-catch").addEventListener('click', e => window.location.replace('/catch'))
+        document.querySelector("#nav-box").addEventListener('click', e => window.location.assign('/myMon'))
+        document.querySelector("#nav-dex").addEventListener('click', e => window.location.assign('/pokedex'))
+        document.querySelector("#nav-catch").addEventListener('click', e => window.location.assign('/catch'))
         document.querySelector("#nav-trade").addEventListener('click', e => {
             var req = new XMLHttpRequest()
             req.responseType = 'json'
             req.addEventListener('load', ev => {
                 if (ev.target.status == 200) {
-                    window.location.replace("/trade/"+ev.target.response.resourceID)
+                    window.location.assign("/trade/"+ev.target.response.resourceID)
                 }
             })
             req.open('POST', '/trade')
@@ -26,7 +34,7 @@
             req.responseType = 'json'
             req.addEventListener('load', ev => {
                 if (ev.target.status == 200) {
-                    window.location.replace("/")
+                    window.location.assign("/")
                 }
             })
             req.open('POST', '/auth/logout')
@@ -34,4 +42,6 @@
             req.send(JSON.stringify({}))
         })
     </script>
+    <script type="text/javascript" src="/static/jquery.slim.min.js"></script>
+    <script type="text/javascript" src="/static/bootstrap.min.js"></script>
 </nav>
