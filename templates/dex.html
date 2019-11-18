@@ -1,92 +1,94 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<title>Pokedex Entry</title>
-
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-<link href="/static/main.css" rel="stylesheet">
-</head>
-<body>
-    {% include 'header.html' %}
-    {% include 'nav.html' %}
-    <h1>Pokedex Entry</h1>
-        {% for item in info %}
-        <center>    
-        <h2>{{item.pokemonNo }} {{ item.speciesName }}</h2>
-        {% if item.pokemonNo < 10 %}
-        <figure>       
-                <img src="https://www.serebii.net/sunmoon/pokemon/00{{item.pokemonNo}}.png" width=200 height=200>
-                <figcaption>Regular</figcaption>
-            </figure>
-            <figure>
-                <img src="https://www.serebii.net/Shiny/SM/00{{item.pokemonNo}}.png" width=200 height=200>
-                <figcaption>Shiny</figcaption>
-            </figure>
-        {% elif item.pokemonNo < 100 %}
-        <figure>       
-            <img src="https://www.serebii.net/sunmoon/pokemon/0{{item.pokemonNo}}.png" width=200 height=200>
-            <figcaption>Regular</figcaption>
-        </figure>
-        <figure>
-            <img src="https://www.serebii.net/Shiny/SM/0{{item.pokemonNo}}.png" width=200 height=200>
-            <figcaption>Shiny</figcaption>
-        </figure>
-        {% else %}
-        <figure>       
-                <img src="https://www.serebii.net/sunmoon/pokemon/{{item.pokemonNo}}.png" width=200 height=200>
-                <figcaption>Regular</figcaption>
-            </figure>
-            <figure>
-                <img src="https://www.serebii.net/Shiny/SM/{{item.pokemonNo}}.png" width=200 height=200>
-                <figcaption>Shiny</figcaption>
-            </figure>
-        {% endif %}
-   
-        {% if item.typeName2 %}
-            
-            <p>Types: <img src={{item.typeName }} width=50 height=20> <img src={{item.typeName2}} width=50 height=20></p>
-            <p>Height: {{item.height}} m</p>
-            <p>Weight: {{item.weight}} kg</p>
-            {% else %}
-            <p>Type: <img src={{item.typeName }} width=50 height=20></p>
-            <p>Height: {{item.height}} m</p>
-            <p>Weight: {{item.weight}} kg</p>
-            {% endif %}
-            {% if item.pokemonNo > 733 %}
-            <p>Encountered in the wild at:<br>
-                {% if item.locLen == 0 %}
-                - None
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0">
+        <meta name="Description" content="Pokedex Entry">
+        <title>Pokedex Entry</title>
+        <link href="/static/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/main.css" rel="stylesheet">
+    </head>
+    <body>
+        <div class="content">
+            {% include 'nav.html' %}
+            <h1>Pokedex Entry</h1>
+            <main class="text-center"> 
+                <h2>{{ item.pokemonNo }} {{ item.speciesName }}</h2>
+                {% if item.pokemonNo < 10 %}
+                    <figure>       
+                        <img src="https://www.serebii.net/sunmoon/pokemon/00{{item.pokemonNo}}.png" width=200 height=200>
+                        <figcaption>Regular</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="https://www.serebii.net/Shiny/SM/00{{item.pokemonNo}}.png" width=200 height=200>
+                        <figcaption>Shiny</figcaption>
+                    </figure>
+                {% elif item.pokemonNo < 100 %}
+                    <figure>       
+                        <img src="https://www.serebii.net/sunmoon/pokemon/0{{item.pokemonNo}}.png" width=200 height=200>
+                        <figcaption>Regular</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="https://www.serebii.net/Shiny/SM/0{{item.pokemonNo}}.png" width=200 height=200>
+                        <figcaption>Shiny</figcaption>
+                    </figure>
                 {% else %}
-                {% for loc in item.loc %}
-                - {{ loc[0] }} in the {{ loc[1] }} region<br>
-                {% endfor %}
+                    <figure>       
+                        <img src="https://www.serebii.net/sunmoon/pokemon/{{item.pokemonNo}}.png" width=200 height=200>
+                        <figcaption>Regular</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="https://www.serebii.net/Shiny/SM/{{item.pokemonNo}}.png" width=200 height=200>
+                        <figcaption>Shiny</figcaption>
+                    </figure>
                 {% endif %}
-            </p>
-            {% endif %}
-
-            {% if item.fromLen != 0 %}
-            <p>Evolves From:<br>
-                {% for from in item.from %}
-                    - <a href="/dex/{{ from[0] }}">{{ from[1] }}</a> <br>
-                    {% endfor %}
-            </p>
-            {% endif %}
-
-            {% if item.toLen != 0 %}
-            <p>Evolves To:<br>
-                {% for to in item.to %}
-                    - <a href="/dex/{{ to[0] }}">{{ to[1] }}</a> <br>
-                    {% endfor %}
-            </p>
-            {% endif %}
-
-            <p>Egg Group(s):<br>
-                    {% for group in item.egg %}
-                    - {{ group }} <br>
-                    {% endfor %}
-                    </p>
-            {% endfor %}
             
-        </center>
-</body>
+                {% if item.typeName2 %}
+                    <p>Types: <img src={{item.typeName }} width=50 height=20> <img src={{item.typeName2}} width=50 height=20></p>
+                    <p>Height: {{item.height}} m</p>
+                    <p>Weight: {{item.weight}} kg</p>
+                {% else %}
+                    <p>Type: <img src={{item.typeName }} width=50 height=20></p>
+                    <p>Height: {{item.height}} m</p>
+                    <p>Weight: {{item.weight}} kg</p>
+                {% endif %}
+                    {% if item.pokemonNo > 733 %}
+                        <p>Encountered in the wild at:{% if item.locLen == 0 %}None{% endif %}</p>
+                        {% if item.locLen != 0 %}
+                            <ul>
+                                {% for loc in item.loc %}
+                                    <li>{{ loc[0] }} in the {{ loc[1] }} region</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endif %}
+
+                    {% if item.fromLen != 0 %}
+                        <p>Evolves From:</p>
+                        <ul>
+                            {% for from in item.from %}
+                                <li><a href="/dex/{{ from[0] }}">{{ from[1] }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if item.toLen != 0 %}
+                        <p>Evolves To:</p>
+                        <ul>
+                            {% for to in item.to %}
+                                <li><a href="/dex/{{ to[0] }}">{{ to[1] }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <p>Egg Group(s):</p>
+                    <ul>
+                        {% for group in item.egg %}
+                            <li>{{ group }}</li>
+                        {% endfor %}
+                    </ul>
+            </main>
+        </div>
+        {% include 'footer.html' %}
+    </body>
 </html>
