@@ -69,7 +69,7 @@ def updateToken(token, res):
 
     # Check db for preexisting record for that userid
     try:
-        cursor = Cursor()
+        cursor = Cursor(prepared=True)
         cursor.execute("SELECT email FROM Trainer WHERE userid = %s", (token["userid"],))
         row = cursor.fetchone()
         cursor.close()
@@ -83,7 +83,7 @@ def updateToken(token, res):
 
     # Set lastLogin.
     try:
-        cursor = Cursor()
+        cursor = Cursor(prepared=True)
         cursor.execute("UPDATE Trainer SET lastLogin = %s WHERE userid = %s", (lastLogin, token["userid"]))
         cursor.close()
         
@@ -437,7 +437,7 @@ def auth():
 
         # Check db for preexisting record for that email
         try:
-            cursor = Cursor()
+            cursor = Cursor(prepared=True)
             cursor.execute("SELECT userid, passHash FROM Trainer WHERE email = %s", (email,))
             row = cursor.fetchone()
             cursor.close()
@@ -454,12 +454,13 @@ def auth():
             return make_response(jsonify({'err': 'Invalid email'}), status.BAD_REQUEST)
 
         (userid, passHash) = row
+        passHash = passHash.decode('utf-8')
         if not bcrypt.checkpw(password.encode('utf-8'), passHash.encode('utf-8')):
             return make_response(jsonify({'err': 'Unauthorized login'}), status.UNAUTHORIZED)
 
         # Set lastLogin.
         try:
-            cursor = Cursor()
+            cursor = Cursor(prepared=True)
             cursor.execute("UPDATE Trainer SET lastLogin = %s WHERE userid = %s", (lastLogin, userid))
             cursor.close()
             
@@ -484,7 +485,7 @@ def auth():
 
         # Check db for preexisting record for that email
         try:
-            cursor = Cursor()
+            cursor = Cursor(prepared=True)
             cursor.execute("SELECT userid FROM Trainer WHERE email = %s", (email,))
             nrows = len(cursor.fetchall())
             cursor.close()
@@ -513,7 +514,7 @@ def auth():
 
         # Insert into table
         try:
-            cursor = Cursor()
+            cursor = Cursor(prepared=True)
             cursor.execute("INSERT INTO Trainer (email, userName, passHash) VALUES (%s, %s, %s)", (email, userName, passHash))
             cursor.close()
             
@@ -688,10 +689,10 @@ def create_trade(token):
     # Create random resource id until we find one that isn't in the table.
     l = []
     try:
-        cursor = Cursor()
+        cursor = Cursor(prepared=True)
         cursor.execute("SELECT resourceId FROM `temp_trades` WHERE expires > CURRENT_TIMESTAMP", ())
         for row in cursor:
-            l.append(row[0])
+            l.append(row[0].decode('utf-8'))
         cursor.close()
         
     except Exception as err:
@@ -701,7 +702,7 @@ def create_trade(token):
     while rscID in l:
         rscID = rand11()
     try:
-        cursor = Cursor()
+        cursor = Cursor(prepared=True)
         exp = datetime.datetime.utcnow() + datetime.timedelta(days=1)
         cursor.execute("INSERT INTO `temp_trades` (resourceId, expires) VALUES (%s,%s)", (rscID,exp))
         cursor.close()
@@ -741,7 +742,7 @@ def tradeDaemon(token, rscID):
     if rtype == "join":
         res = make_response(jsonify({'err': "Room doesn't exist"}), status.NOT_FOUND)
         try:
-            cursor = Cursor()
+            cursor = Cursor(prepared=True)
             data = tempfor(cursor, rscID)
             if data:
                 if data["user1Id"] == token["userid"] or data["user2Id"] == token["userid"]:
@@ -764,7 +765,7 @@ def tradeDaemon(token, rscID):
     elif rtype == "leave":
         res = make_response(jsonify({'err': "Room doesn't exist"}), status.NOT_FOUND)
         try:
-            cursor = Cursor()
+            cursor = Cursor(prepared=True)
             data = tempfor(cursor, rscID)
             if data:
                 if data["user1Id"] == token["userid"]:
@@ -924,7 +925,7 @@ def tradeDaemon(token, rscID):
             res = make_response(jsonify({'err': 'ISE'}), status.INTERNAL_SERVER_ERROR)
     elif rtype == "tradePoll":
         try:
-            cursor = Cursor()
+            cursor = Cursor(prepared=True)
             data = tempfor(cursor, rscID)
             if data is None:
                 return make_response(jsonify({'err': 'Invalid resource'}), status.NOT_FOUND)
@@ -937,11 +938,13 @@ def tradeDaemon(token, rscID):
             row = cursor.fetchone()
             if row != None:
                 (data["userName1"],) = row
+                data["userName1"] = data["userName1"].decode('utf-8')
 
             cursor.execute("SELECT userName FROM Trainer WHERE userid = %s", (data["user2Id"],))
             row = cursor.fetchone()
             if row != None:
                 (data["userName2"],) = row
+                data["userName2"] = data["userName2"].decode('utf-8')
             
             p1 = {'ownsId': data["pokemon1"], 'number':None, 'species':None, 'nickname':None, 'level':None, 'gender':None, 'shiny':None}
             p2 = {'ownsId': data["pokemon2"], 'number':None, 'species':None, 'nickname':None, 'level':None, 'gender':None, 'shiny':None}
@@ -951,14 +954,18 @@ def tradeDaemon(token, rscID):
                 row = cursor.fetchone()
                 if row != None:
                     p1["number"], p1["species"], p1["nickname"], p1["level"], p1["gender"], p1["shiny"] = row
-                    p1["species"] = p1["species"].capitalize()
+                    if p1["nickname"] != None:
+                        p1["nickname"] = p1["nickname"].decode('utf-8')
+                    p1["species"] = p1["species"].decode('utf-8').capitalize()
 
             if p2["ownsId"] != None:
                 cursor.execute("SELECT pokemonNo, speciesName, nickname, level, gender, shiny FROM `owns` NATURAL JOIN `pokemon` WHERE ownsId = %s", (p2["ownsId"],))
                 row = cursor.fetchone()
                 if row != None:
                     p2["number"], p2["species"], p2["nickname"], p2["level"], p2["gender"], p2["shiny"] = row
-                    p2["species"] = p2["species"].capitalize()
+                    if p2["nickname"] != None:
+                        p2["nickname"] = p2["nickname"].decode('utf-8')
+                    p2["species"] = p2["species"].decode('utf-8').capitalize()
 
             data["pokemon1"] = p1
             data["pokemon2"] = p2
