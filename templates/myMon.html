@@ -13,6 +13,7 @@
             {% include 'nav.html' %}
             <h1>Box</h1>
             <main>
+                <p><center><button class="btn btn-primary"><a href="/myMon/download" style="color: white;">Download Box Data</a></button></center></p>
                 <input type="text" class="form-control" id="search" onkeyup="filter()" placeholder="Search">
                 {% if msg %}
                 <p><font color="red">{{ msg }}</font></p>
