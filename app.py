@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, render_template, redirect, jsonify, url_for, make_response
+from flask import Flask, request, render_template, redirect, jsonify, url_for, make_response, Response
 from http import HTTPStatus as status
 from email_validator import validate_email
 from functools import wraps
@@ -13,6 +13,7 @@ import datetime
 import time
 import jwt
 import numpy
+import json
 
 # Store application's state in this dictionary
 stay = {}
@@ -153,6 +154,19 @@ def myMon(token):
     size = len(info)
     cursor.close()
     return render_template("/myMon.html", info=info, size=size, msg=msg)
+
+@app.route("/myMon/download")
+@login_required
+def download(token):
+    cursor = Cursor(buffered=True)
+    info = get_mon(cursor, token["userid"])
+    for x in info:
+        x['met'] = str(x['met'])
+    return Response(
+        json.dumps(info),
+        mimetype="application/json",
+        headers={"Content-disposition": "attachment; filename=myMon.json"}
+    )
 
 @app.route("/release/<id>")
 @login_required
