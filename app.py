@@ -620,7 +620,18 @@ def catch(token):
     def get_shiny_chance():
         return int(numpy.random.ranf()<shiny_rate)
     def get_gender_chance(pokeNo):
-        return numpy.random.randint(3)
+        cursor = Cursor(buffered=True)
+        query = "SELECT genderRatioId FROM `hasGenderRatio` WHERE pokemonNo=%s"
+        cursor.execute(query,(pokeNo,))
+        #print(cursor.fetchall())
+        ratio_type=cursor.fetchone()[0]
+        cursor.close()
+        # 0,1,2 correspond to 100% of respective gender
+        if ratio_type in [0,1,2]:
+            return ratio_type
+        else:
+            # Choose either 1 or 2
+            return numpy.random.randint(2)+1
     if request.method=="GET":
         try:
             msg = request.args.get('msg', None)
@@ -673,15 +684,17 @@ def catch(token):
             pkmn_info=get_catchable(uid)
             time_left=last_catch_expire(uid,last_encounter_delta)
             #Will need to handle this better later
-            if pkmn_info is None or time_left < datetime.timedelta(0):
-                #Couldn't find catchable pokemon in the table
-                return redirect(url_for('myMon',msg="The wild pokemon fled!"), code=status.FOUND)
             
             delete_encounter_query=("DELETE FROM `catchable` WHERE userid=%s")
             delete_encounter_args=(uid,)
             cursor = Cursor(buffered=True)
             should_catch=request.form.get('catch', False)
             if should_catch:
+                    
+                if pkmn_info is None or time_left < datetime.timedelta(0):
+                    #Couldn't find catchable pokemon in the table
+                    cursor.close()
+                    return redirect(url_for('myMon',msg="The wild pokemon fled!"), code=status.FOUND)
                 insert_catch_query=("INSERT INTO `owns` "
                 "(pokemonNo, userid, level, gender, shiny, met, originalTrainerId) VALUES "
                 "(%s,%s,%s,%s,%s,CURRENT_TIMESTAMP(),%s)")
