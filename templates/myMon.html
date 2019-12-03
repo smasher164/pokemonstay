@@ -40,11 +40,11 @@
                         {% for item in info %}
                         <tr>
                             {% if item.pokemonNo < 10 %}
-                            <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                            <td><img class="icon-spacer" src="https://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
                             {% elif item.pokemonNo < 100 %}
-                            <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                            <td><img class="icon-spacer" src="https://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
                             {% else %}
-                            <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                            <td><img class="icon-spacer" src="https://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
                             {% endif %}
                             <td>{% if item.nickname %}
                                 {{ item.nickname }}

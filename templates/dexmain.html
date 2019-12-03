@@ -27,11 +27,11 @@
                 <tr>
                     <td>{{item.pokemonNo }}</td>
                     {% if item.pokemonNo < 10 %}
-                    <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png" alt="{{item.speciesName}}"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                    <td><img class="icon-spacer" src="https://www.serebii.net/pokedex-sm/icon/00{{ item.pokemonNo }}.png" alt="{{item.speciesName}}"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
                     {% elif item.pokemonNo < 100 %}
-                    <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"alt="{{item.speciesName}}"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                    <td><img class="icon-spacer" src="https://www.serebii.net/pokedex-sm/icon/0{{ item.pokemonNo }}.png"alt="{{item.speciesName}}"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
                     {% else %}
-                    <td><img class="icon-spacer" src="http://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"alt="{{item.speciesName}}"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
+                    <td><img class="icon-spacer" src="https://www.serebii.net/pokedex-sm/icon/{{ item.pokemonNo }}.png"alt="{{item.speciesName}}"/><a href="/dex/{{ item.pokemonNo }}">{{ item.speciesName }}</a></td>
                     {% endif %}
                     <td><img class="icon-spacer" src="https://www.serebii.net/pokedex-bw/type/{{item.typeName }}.gif" alt="{{item.typeName}}" width="50" height="20"/><img src="https://www.serebii.net/pokedex-bw/type/{{item.typeName2}}.gif" alt="{{item.typeName2}}" width="50" height="20"><p hidden>{{item.typeName}} {{item.typeName2}}</p></td>
                 </tr>
